@@ -10,7 +10,7 @@ For a brief usage:
 tbx -h
 
 Usage: tbx [OPTION]... [FILE]...
-Print a delimited file in tabular form.
+Display a delimited file in tabular form.
 More than one FILE can be specified.
 
   -d, --delimiter=DELIM  the delimiting character for the input FILE(s)
