@@ -271,12 +271,11 @@ int main (int argc, char *argv[])
         else if (optind > argc) {
             break;
         }
-        // printf("The filename is %s\n", filename);
+        debug("The input filename is %s\n", filename);
 
         // Display the file:
         if (csv_mode) {
             check(print_table_from_csv_file(filename, table) == 0, "Error counting CSV file: %s", filename);
-            //printf("This is not yet implemented...\n");
         }
         else {
             check(print_table_from_file(filename, table) == 0, "Error processing file: %s", filename);
