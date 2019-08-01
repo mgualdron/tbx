@@ -1,4 +1,4 @@
-CFLAGS=-g -O2 -Wall -Wextra -Isrc -rdynamic -DNDEBUG $(OPTFLAGS)
+CFLAGS=-g -O2 -Wall -Wextra -Isrc -rdynamic -DNDEBUG -DFT_HAVE_WCHAR $(OPTFLAGS)
 INCLUDES=-I $(HOME)/local/include -L $(HOME)/local/lib
 LIBS=libtbx.a
 PREFIX?=$(HOME)/local
