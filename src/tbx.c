@@ -24,6 +24,8 @@ static char delim_csv = CSV_COMMA;
 static char *quote_arg = NULL;
 static char quote = CSV_QUOTE;
 static int ignore_this = 0;
+static int just_pushed_record = 0;
+static DArray *current_record = NULL;
 
 // The callbacks for CSV processing:
 void cb1 (void *s, size_t len, void *data);
@@ -298,31 +300,29 @@ error:
 void cb1_x (void *s, size_t len, void *data)
 {
     DArray *master = (DArray *)data;
-    int end = DArray_end(master) - 1;
+    int last = DArray_end(master) - 1;
 
-    if (end == -1) {
-        DArray *record = DArray_create(sizeof(char *), 10);
-        DArray_push(master, record);
-        end = DArray_end(master) - 1;
+    if ( (last == -1 && current_record == NULL) || just_pushed_record ) {
+        current_record = DArray_create(sizeof(char *), 10);
+        just_pushed_record = 0;
     }
 
-    DArray *record = (DArray *)(master->contents[end]);
-
-    char *copy = (char *)malloc(sizeof(char) * (len + 1));
-    strcpy(copy, s);
-    DArray_push(record, copy);
+    char *field = (char *)malloc(sizeof(char) * (len + 1));
+    strcpy(field, s);
+    DArray_push(current_record, field);
 }
 
 // Callback 2 for CSV support, called whenever a record is processed:
 void cb2_x (int c, void *data)
 {
-    DArray *record = DArray_create(sizeof(char *), 10);
-    DArray_push((DArray *)data, record);
+    DArray_push((DArray *)data, current_record);
+    just_pushed_record = 1;
+    current_record = NULL;
     ignore_this = c;
 }
 
 /* Process a CSV file */
-int csv_file_load(char *filename, DArray *master)
+int file_load_csv(char *filename, DArray *master)
 {
     struct csv_parser p;
     char buf[1024];
@@ -363,11 +363,10 @@ error:
 // Callback 1 for CSV support, called whenever a field is processed:
 void cb1 (void *s, size_t len, void *data)
 {
-    wchar_t w[strlen((char *)s)+1];                       /* VLA */
-    swprintf(w, strlen((char *)s)+1, L"%s", (char *)s);   /* Convert char to wchar_t */
+    wchar_t w[len + 1];                       /* VLA */
+    swprintf(w, len + 1, L"%s", (char *)s);   /* Convert char to wchar_t */
 
     check( ft_wwrite((ft_table_t *)data, w) == 0, "Error writing to text table." );
-    ignore_this = len;
 
     return;
 
@@ -569,7 +568,7 @@ int main (int argc, char *argv[])
             DArray *master = DArray_create(sizeof(DArray *), 10);
             if (csv_mode) {
                 debug("Selected CSV mode");
-                check(csv_file_load(filename, master) == 0, "Error loading csv file: %s", filename);
+                check(file_load_csv(filename, master) == 0, "Error loading csv file: %s", filename);
             }
             else {
                 debug("Selected DELIM mode");
