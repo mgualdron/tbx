@@ -26,6 +26,7 @@ static char quote = CSV_QUOTE;
 static int ignore_this = 0;
 static int just_pushed_record = 0;
 static DArray *current_record = NULL;
+static int delim_len = 0;
 
 // The callbacks for CSV processing:
 void cb1 (void *s, size_t len, void *data);
@@ -76,7 +77,6 @@ static struct option long_options[] = {
     {"help",      no_argument,       0, 'h'},
     {0, 0, 0, 0}
 };
-
 
 /* Remove trailing CR/LF */
 void chomp(char *s) {
@@ -179,7 +179,7 @@ DArray *transpose( DArray *master )
         if ( DArray_end(record) > 0 ) {
             char val[INT_SIZE + 7];
             snprintf(val, INT_SIZE + 7, "RECORD %d", i + 1);
-            char *copy = strdup(val);
+            char *copy = strndup(val, INT_SIZE + 7);
             DArray_push(xhead, copy);
         }
     }
@@ -199,7 +199,7 @@ DArray *transpose( DArray *master )
                 if ( i == 0 ) {
                     char val[INT_SIZE];
                     snprintf(val, INT_SIZE, "%d", j + 1);
-                    char *copy = strdup(val);
+                    char *copy = strndup(val, INT_SIZE);
                     DArray_push(xrec, copy);
                 }
 
@@ -267,15 +267,12 @@ int file_load(char *filename, DArray *master)
 
         chomp(line);
 
-        // DArray *record = DArray_new(master);
-
         DArray *record = DArray_create(sizeof(char *), 10);
 
         char *p = strsep (&line, delim);
         while (p != NULL)
         {
-            char *cell = (char *)malloc(sizeof(char) * (strlen(p) + 1));
-            strcpy(cell, p);
+            char *cell = strdup(p);
             DArray_push(record, cell);
             debug("Processing >>%s<<\n", cell);
             p = strsep (&line, delim);
@@ -287,7 +284,71 @@ int file_load(char *filename, DArray *master)
 
     debug("Read a total of %d records\n", DArray_count(master));
 
-    free(line);
+    if ( line != NULL )
+        free(line);
+    fclose(fp);
+
+    return 0;
+
+error:
+    return -1;
+}
+
+/* Process a regular delimited file with multi-char delims*/
+int file_load_multi(char *filename, DArray *master)
+{
+    char *line = NULL;
+    char *orig_line = NULL;
+    FILE *fp = NULL;
+    size_t len = 0;         // allocated size for line
+    ssize_t bytes_read = 0; // num of chars read
+
+    if (filename[0] == '-') {
+        fp = stdin;
+    }
+    else {
+        fp = fopen(filename, "rb");
+    }
+
+    check(fp != NULL, "Error opening file: %s.", filename);
+
+    while ((bytes_read = getline(&line, &len, fp)) != -1) {
+
+        orig_line = line;
+        chomp(line);
+
+        DArray *record = DArray_create(sizeof(char *), 10);
+
+        // Search for tokens using strstr()
+        char *p = strstr(line, delim);
+        while ( p != NULL )
+        {
+            if (p) 
+              *p = '\0';
+
+            char *cell = strdup(line);
+            DArray_push(record, cell);
+            debug("Processing >>%s<<\n", cell);
+
+            line = p + delim_len;
+            p = strstr(line, delim);
+        }
+        // do one more (past the last delimiter):
+        char *cell = strdup(line);
+        DArray_push(record, cell);
+        debug("Processing >>%s<<\n", cell);
+
+        // Now put the whole record on the master array
+        DArray_push(master, record);
+        debug("Loaded record: %d\n", DArray_count(master));
+        
+        if ( orig_line != NULL )
+            free(orig_line);
+        line = NULL;
+    }
+
+    debug("Read a total of %d records\n", DArray_count(master));
+
     fclose(fp);
 
     return 0;
@@ -307,8 +368,7 @@ void cb1_x (void *s, size_t len, void *data)
         just_pushed_record = 0;
     }
 
-    char *field = (char *)malloc(sizeof(char) * (len + 1));
-    strcpy(field, s);
+    char *field = strndup(s, len);
     DArray_push(current_record, field);
 }
 
@@ -421,7 +481,7 @@ error:
     return -1;
 }
 
-/* Process a regular delimited file */
+/* Process a regular delimited file (single-char delimiter) */
 int print_table_from_file(char *filename, ft_table_t *table)
 {
     char *line = NULL;
@@ -443,21 +503,81 @@ int print_table_from_file(char *filename, ft_table_t *table)
 
         chomp(line);
 
-        char *p = strtok (line, delim);
+        char *p = strsep (&line, delim);
         while (p != NULL)
         {
             wchar_t w[strlen(p)+1];              /* VLA */
             swprintf(w, strlen(p)+1, L"%s", p);  /* Convert char to wchar_t */
-            ft_wwrite(table, w);                 /* Put w in the table */
-            p = strtok (NULL, delim);
+            ft_wwrite(table, w);                 /* Put w in the heap */
+            p = strsep (&line, delim);
         }
+
         ft_ln(table);
 
     }
 
     printf("%ls\n", ft_to_wstring(table));
 
-    free(line);
+    if ( line != NULL )
+        free(line);
+    fclose(fp);
+
+    return 0;
+
+error:
+    return -1;
+}
+
+/* Process a regular delimited file (multi-char delimiter) */
+int print_table_from_file_multi(char *filename, ft_table_t *table)
+{
+    char *line = NULL;
+    FILE *fp = NULL;
+    size_t len = 0;           // allocated size for line
+    ssize_t bytes_read = 0;   // num of chars read
+    setlocale(LC_CTYPE, "");  // Avoid printing blank
+
+    if (filename[0] == '-') {
+        fp = stdin;
+    }
+    else {
+        fp = fopen(filename, "rb");
+    }
+
+    check(fp != NULL, "Error opening file: %s.", filename);
+
+    while ((bytes_read = getline(&line, &len, fp)) != -1) {
+
+        chomp(line);
+
+        // Search for tokens using strstr()
+        char *p = strstr(line, delim);
+        while ( p != NULL )
+        {
+            if (p) 
+              *p = '\0';
+
+            debug("TOKEN: %s", line);
+            wchar_t w[strlen(line)+1];                 /* VLA */
+            swprintf(w, strlen(line)+1, L"%s", line);  /* Convert char to wchar_t */
+            ft_wwrite(table, w);                       /* Put w in the heap */
+
+            line = p + delim_len;
+            p = strstr(line, delim);
+        }
+        // do one more (past the last delimiter):
+        debug("TOKEN: %s", line);
+        wchar_t w[strlen(line)+1];                 /* VLA */
+        swprintf(w, strlen(line)+1, L"%s", line);  /* Convert char to wchar_t */
+        ft_wwrite(table, w);                       /* Put w in the heap */
+        
+        ft_ln(table);
+    }
+
+    printf("%ls\n", ft_to_wstring(table));
+
+    if ( line != NULL )
+        free(line);
     fclose(fp);
 
     return 0;
@@ -541,6 +661,8 @@ int main (int argc, char *argv[])
         delim = delim_arg;
     }
 
+    delim_len = strlen(delim);
+
     int j = optind;  // A copy of optind (the number of options at the command-line),
                      // which is not the same as argc, as that counts ALL
                      // arguments.  (optind <= argc).
@@ -572,7 +694,13 @@ int main (int argc, char *argv[])
             }
             else {
                 debug("Selected DELIM mode");
-                check(file_load(filename, master) == 0, "Error loading delimited file: %s", filename);
+                if ( delim_len > 1 ) {
+                    check(file_load_multi(filename, master) == 0, "Error loading delimited file: %s", filename);
+                    debug("Completed file_load_multi()");
+                }
+                else {
+                    check(file_load(filename, master) == 0, "Error loading delimited file: %s", filename);
+                }
             }
 
             DArray *xpose = transpose(master);
@@ -593,7 +721,12 @@ int main (int argc, char *argv[])
                 check(print_table_from_csv_file(filename, table) == 0, "Error counting CSV file: %s", filename);
             }
             else {
-                check(print_table_from_file(filename, table) == 0, "Error processing file: %s", filename);
+                if ( delim_len > 1 ) {
+                    check(print_table_from_file_multi(filename, table) == 0, "Error processing file: %s", filename);
+                }
+                else {
+                    check(print_table_from_file(filename, table) == 0, "Error processing file: %s", filename);
+                }
             }
 
             ft_destroy_table(table);
