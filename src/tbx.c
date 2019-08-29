@@ -320,6 +320,8 @@ int file_load_multi(char *filename, DArray *matrix)
     size_t len = 0;         // allocated size for line
     ssize_t bytes_read = 0; // num of chars read
 
+    line_num = 0;
+
     if (filename[0] == '-') {
         fp = stdin;
     }
@@ -331,37 +333,42 @@ int file_load_multi(char *filename, DArray *matrix)
 
     while ((bytes_read = getline(&line, &len, fp)) != -1) {
 
-        orig_line = line;
-        chomp(line);
+        line_num++;
 
-        DArray *record = DArray_create(sizeof(char *), 10);
+        if ( full_mode || ((line_num >= line_arg) && (line_num <= line_arg + row_arg - 1)) ) {
 
-        // Search for tokens using strstr()
-        char *p = strstr(line, delim);
-        while ( p != NULL )
-        {
-            if (p) 
-              *p = '\0';
+            orig_line = line;
+            chomp(line);
 
+            DArray *record = DArray_create(sizeof(char *), 10);
+
+            // Search for tokens using strstr()
+            char *p = strstr(line, delim);
+            while ( p != NULL )
+            {
+                if (p) 
+                  *p = '\0';
+
+                char *cell = strdup(line);
+                DArray_push(record, cell);
+                debug("Processing >>%s<<\n", cell);
+
+                line = p + delim_len;
+                p = strstr(line, delim);
+            }
+            // do one more (past the last delimiter):
             char *cell = strdup(line);
             DArray_push(record, cell);
             debug("Processing >>%s<<\n", cell);
 
-            line = p + delim_len;
-            p = strstr(line, delim);
-        }
-        // do one more (past the last delimiter):
-        char *cell = strdup(line);
-        DArray_push(record, cell);
-        debug("Processing >>%s<<\n", cell);
+            // Now put the whole record on the matrix array
+            DArray_push(matrix, record);
+            debug("Loaded record: %d\n", DArray_count(matrix));
 
-        // Now put the whole record on the matrix array
-        DArray_push(matrix, record);
-        debug("Loaded record: %d\n", DArray_count(matrix));
-        
-        if ( orig_line != NULL )
-            free(orig_line);
-        line = NULL;
+            if ( orig_line != NULL )
+                free(orig_line);
+            line = NULL;
+        }
     }
 
     debug("Read a total of %d records\n", DArray_count(matrix));
