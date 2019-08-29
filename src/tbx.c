@@ -377,31 +377,37 @@ int file_load_multi(char *filename, DArray *matrix)
 
     return 0;
 
-error:
-    return -1;
+error: return -1;
 }
 
 // Callback 1 for CSV support, called whenever a field is processed:
 void cb1_x (void *s, size_t len, void *data)
 {
-    DArray *matrix = (DArray *)data;
-    int last = DArray_end(matrix) - 1;
+    if ( full_mode || ((line_num >= line_arg) && (line_num <= line_arg + row_arg - 1)) ) {
 
-    if ( (last == -1 && current_record == NULL) || just_pushed_record ) {
-        current_record = DArray_create(sizeof(char *), 10);
-        just_pushed_record = 0;
+        DArray *matrix = (DArray *)data;
+        int last = DArray_end(matrix) - 1;
+
+        if ( (last == -1 && current_record == NULL) || just_pushed_record ) {
+            current_record = DArray_create(sizeof(char *), 10);
+            just_pushed_record = 0;
+        }
+
+        char *field = strndup(s, len);
+        DArray_push(current_record, field);
     }
-
-    char *field = strndup(s, len);
-    DArray_push(current_record, field);
 }
 
 // Callback 2 for CSV support, called whenever a record is processed:
 void cb2_x (int c, void *data)
 {
-    DArray_push((DArray *)data, current_record);
-    just_pushed_record = 1;
-    current_record = NULL;
+
+    if ( full_mode || ((line_num >= line_arg) && (line_num <= line_arg + row_arg - 1)) ) {
+        DArray_push((DArray *)data, current_record);
+        just_pushed_record = 1;
+        current_record = NULL;
+    }
+    line_num++;
     ignore_this = c;
 }
 
@@ -412,6 +418,8 @@ int file_load_csv(char *filename, DArray *matrix)
     char buf[1024];
     FILE *fp = NULL;
     size_t bytes_read = 0; // num of chars read
+
+    line_num = 1;   // Start at 1 since cb1_x is called before cb2_x.
 
     if (filename[0] == '-') {
         fp = stdin;
@@ -431,9 +439,15 @@ int file_load_csv(char *filename, DArray *matrix)
     while ((bytes_read=fread(buf, 1, 1024, fp)) > 0) {
         check(csv_parse(&p, buf, bytes_read, cb1_x, cb2_x, matrix) == bytes_read
                 , "Error while parsing file: %s", csv_strerror(csv_error(&p)));
+
+        if ( full_mode == 0 && line_num > line_arg + row_arg - 1 ) {
+            break;
+        }
     }
 
-    check(csv_fini(&p, cb1, cb2, matrix) == 0, "Error finishing CSV processing.");
+    if ( full_mode ) {
+        check(csv_fini(&p, cb1, cb2, matrix) == 0, "Error finishing CSV processing.");
+    }
 
     csv_free(&p);
     fclose(fp);
@@ -497,11 +511,9 @@ int print_table_from_file_csv(char *filename, ft_table_t *table)
     while ((bytes_read=fread(buf, 1, 1024, fp)) > 0) {
         check(csv_parse(&p, buf, bytes_read, cb1, cb2, table) == bytes_read, "Error while parsing file: %s", csv_strerror(csv_error(&p)));
 
-        /*
         if ( full_mode == 0 && line_num > line_arg + row_arg - 1 ) {
             break;
         }
-        */
     }
 
     if ( full_mode ) {
