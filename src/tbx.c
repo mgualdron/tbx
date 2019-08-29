@@ -27,6 +27,7 @@ static int ignore_this = 0;
 static int just_pushed_record = 0;
 static DArray *current_record = NULL;
 static int delim_len  = 0;
+static int line_num   = 0;
 static int full_mode  = -1;
 static int line_arg   = 1;
 static int row_arg    = 1;
@@ -433,10 +434,11 @@ error:
 // Callback 1 for CSV support, called whenever a field is processed:
 void cb1 (void *s, size_t len, void *data)
 {
-    wchar_t w[len + 1];                       /* VLA */
-    swprintf(w, len + 1, L"%s", (char *)s);   /* Convert char to wchar_t */
-
-    check( ft_wwrite((ft_table_t *)data, w) == 0, "Error writing to text table." );
+    if ( full_mode || ((line_num >= line_arg) && (line_num <= line_arg + row_arg - 1)) ) {
+        wchar_t w[len + 1];                       /* VLA */
+        swprintf(w, len + 1, L"%s", (char *)s);   /* Convert char to wchar_t */
+        check( ft_wwrite((ft_table_t *)data, w) == 0, "Error writing to text table." );
+    }
 
     return;
 
@@ -447,19 +449,24 @@ error:
 // Callback 2 for CSV support, called whenever a record is processed:
 void cb2 (int c, void *data)
 {
-    ft_ln((ft_table_t *)data);
+    line_num++;
+    if ( full_mode || ((line_num >= line_arg) && (line_num <= line_arg + row_arg - 1)) ) {
+        ft_ln((ft_table_t *)data);
+    }
     ignore_this = c;
 }
 
 
 /* Process a CSV file */
-int print_table_from_csv_file(char *filename, ft_table_t *table)
+int print_table_from_file_csv(char *filename, ft_table_t *table)
 {
     struct csv_parser p;
     char buf[1024];
     FILE *fp = NULL;
     size_t bytes_read = 0;    // num of chars read
     setlocale(LC_CTYPE, "");  // Avoid printing blank
+
+    line_num = 1;   // Start at 1 since cb1 is called before cb2.
 
     if (filename[0] == '-') {
         fp = stdin;
@@ -476,9 +483,17 @@ int print_table_from_csv_file(char *filename, ft_table_t *table)
 
     while ((bytes_read=fread(buf, 1, 1024, fp)) > 0) {
         check(csv_parse(&p, buf, bytes_read, cb1, cb2, table) == bytes_read, "Error while parsing file: %s", csv_strerror(csv_error(&p)));
+
+        /*
+        if ( full_mode == 0 && line_num > line_arg + row_arg - 1 ) {
+            break;
+        }
+        */
     }
 
-    check(csv_fini(&p, cb1, cb2, table) == 0, "Error finishing CSV processing.");
+    if ( full_mode ) {
+        check(csv_fini(&p, cb1, cb2, table) == 0, "Error finishing CSV processing.");
+    }
 
     printf("%ls\n", ft_to_wstring(table));
 
@@ -499,7 +514,8 @@ int print_table_from_file(char *filename, ft_table_t *table)
     size_t len = 0;           // allocated size for line
     ssize_t bytes_read = 0;   // num of chars read
     setlocale(LC_CTYPE, "");  // Avoid printing blank
-    int line_num = 0;
+
+    line_num = 0;
 
     if (filename[0] == '-') {
         fp = stdin;
@@ -557,7 +573,8 @@ int print_table_from_file_multi(char *filename, ft_table_t *table)
     size_t len = 0;           // allocated size for line
     ssize_t bytes_read = 0;   // num of chars read
     setlocale(LC_CTYPE, "");  // Avoid printing blank
-    int line_num = 0;
+
+    line_num = 0;
 
     if (filename[0] == '-') {
         fp = stdin;
@@ -625,7 +642,7 @@ int main (int argc, char *argv[])
     int xpose_arg      = 0;
     int line_arg_flag  = 0;
     int row_arg_flag   = 0;
-    int add_header_arg = 1;
+    //int add_header_arg = 1;
 
     /* Loop through the incoming command-line arguments. */
     while (1) {
@@ -668,7 +685,7 @@ int main (int argc, char *argv[])
 
             case 'A':
                 debug("option -A");
-                add_header_arg = 1;
+                //add_header_arg = 1;
                 break;
 
             case 'F':
@@ -812,7 +829,7 @@ int main (int argc, char *argv[])
             ft_set_border_style(table, FT_NICE_STYLE);
 
             if (csv_mode) {
-                check(print_table_from_csv_file(filename, table) == 0, "Error counting CSV file: %s", filename);
+                check(print_table_from_file_csv(filename, table) == 0, "Error counting CSV file: %s", filename);
             }
             else {
                 if ( delim_len > 1 ) {
