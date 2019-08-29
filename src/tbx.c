@@ -265,6 +265,8 @@ int file_load(char *filename, DArray *matrix)
     size_t len = 0;         // allocated size for line
     ssize_t bytes_read = 0; // num of chars read
 
+    line_num = 0;
+
     if (filename[0] == '-') {
         fp = stdin;
     }
@@ -276,20 +278,24 @@ int file_load(char *filename, DArray *matrix)
 
     while ((bytes_read = getline(&line, &len, fp)) != -1) {
 
+        line_num++;
         chomp(line);
 
-        DArray *record = DArray_create(sizeof(char *), 10);
+        if ( full_mode || ((line_num >= line_arg) && (line_num <= line_arg + row_arg - 1)) ) {
 
-        char *p = strsep (&line, delim);
-        while (p != NULL)
-        {
-            char *cell = strdup(p);
-            DArray_push(record, cell);
-            debug("Processing >>%s<<\n", cell);
-            p = strsep (&line, delim);
+            DArray *record = DArray_create(sizeof(char *), 10);
+
+            char *p = strsep (&line, delim);
+            while (p != NULL)
+            {
+                char *cell = strdup(p);
+                DArray_push(record, cell);
+                debug("Processing >>%s<<\n", cell);
+                p = strsep (&line, delim);
+            }
+            DArray_push(matrix, record);
+            debug("Loaded record: %d\n", DArray_count(matrix));
         }
-        DArray_push(matrix, record);
-        debug("Loaded record: %d\n", DArray_count(matrix));
 
     }
 
