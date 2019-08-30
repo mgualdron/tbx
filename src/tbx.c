@@ -31,7 +31,10 @@ static int line_num   = 0;
 static int full_mode  = -1;
 static int line_arg   = 1;
 static int row_arg    = 1;
-static int header_arg = 1;
+static int header_arg = 0;
+static wchar_t *rdelim = L"\n";
+static size_t rlen = 0;
+static int wrap_len   = 50;
 
 // The callbacks for CSV processing:
 void cb1 (void *s, size_t len, void *data);
@@ -70,7 +73,7 @@ More than one FILE can be specified.\n\
   -l, --from-line=NUM    process starting from this line number\n\
   -r, --row-number=NUM   process this number of rows starting at -l\n\
   -H, --header           process the first line in the file (header)\n\
-  -A, --add-header       file has no header, so build a generic one (col1  col2  ...)\n\
+  -W, --wrap=NUM         wrap each column to this length (default is 50)\n\
   -F, --full             process the whole file (default if not transposing)\n\
   -h, --help             this help\n\
 ");
@@ -87,7 +90,7 @@ static struct option long_options[] = {
     {"transpose" , no_argument,       0, 'x'},
     {"from-line" , required_argument, 0, 'l'},
     {"rows"      , required_argument, 0, 'r'},
-    {"add-header", no_argument,       0, 'A'},
+    {"wrap"      , required_argument, 0, 'W'},
     {"header"    , no_argument,       0, 'H'},
     {"full"      , no_argument,       0, 'F'},
     {"help"      , no_argument,       0, 'h'},
@@ -100,12 +103,45 @@ void chomp(char *s) {
     *s = 0;
 }
 
+/* Wrap a string to a specified width */
+void wrap(wchar_t *input, wchar_t *output, size_t wlen) 
+{
+    size_t p = 0;
+    size_t n = 0;
+    size_t nnl = 0;   // number of newlines to add to input
+    size_t olen = 0; // length of the output (with added newlines)
+
+    nnl = ( wcslen(input) / wlen );   // Number of newlines to add
+    olen = (wcslen(input) + (nnl*rlen) + 1);
+
+    debug("Input has %ld chars, and wrap length is %d, so %ld newlines will be added for a total of %ld chars.",wcslen(input), WRAP, nnl, olen);
+
+    if ( wcslen(input) <= wlen ) {
+        wcsncpy(output, input, olen);
+    }
+    else {
+        p=0;
+        while(1)
+        {
+            wcsncpy(output+p, input+(n*wlen), wlen);
+            p += wlen;
+            wcsncpy(output+p, rdelim, rlen);
+            p += rlen;
+            n++;
+
+            if ( p >= olen - 1 ) {
+                break;
+            }
+        }
+    }
+}
+
 
 /* Print an array of arrays in table form */
 void print_table_from_matrix(DArray *matrix)
 {
 
-    int i, j;
+    int i, j, nnl;
     DArray *record;
     setlocale(LC_CTYPE, "");  // Avoid printing blank
 
@@ -128,7 +164,12 @@ void print_table_from_matrix(DArray *matrix)
                 char *p = (char *)(record->contents[j]);
                 wchar_t w[strlen(p)+1];              /* VLA */
                 swprintf(w, strlen(p)+1, L"%s", p);  /* Convert char to wchar_t */
-                ft_wwrite(table, w);                 /* Put w on the heap */
+
+                nnl = ( wcslen(w) / wrap_len );      // Number of newlines to add
+                wchar_t o[wcslen(w) + (nnl*rlen) + 1];   // VLA
+                wrap(w, o, wrap_len);
+
+                ft_wwrite(table, o);                 /* Put o on the heap */
             }
 
             ft_ln(table);
@@ -257,7 +298,7 @@ void tb_print( DArray *matrix )
     }
 }
 
-/* Process a regular delimited file */
+/* Load a regular delimited file */
 int file_load(char *filename, DArray *matrix)
 {
     char *line = NULL;
@@ -281,7 +322,7 @@ int file_load(char *filename, DArray *matrix)
         line_num++;
         chomp(line);
 
-        if ( full_mode || ((line_num >= line_arg) && (line_num <= line_arg + row_arg - 1)) ) {
+        if ( full_mode || ( header_arg && line_num == 1 ) || ( (line_num >= line_arg) && (line_num <= line_arg + row_arg - 1) ) ) {
 
             DArray *record = DArray_create(sizeof(char *), 10);
 
@@ -311,7 +352,7 @@ error:
     return -1;
 }
 
-/* Process a regular delimited file with multi-char delims*/
+/* Load a regular delimited file with multi-character delimiters */
 int file_load_multi(char *filename, DArray *matrix)
 {
     char *line = NULL;
@@ -335,7 +376,7 @@ int file_load_multi(char *filename, DArray *matrix)
 
         line_num++;
 
-        if ( full_mode || ((line_num >= line_arg) && (line_num <= line_arg + row_arg - 1)) ) {
+        if ( full_mode || ( header_arg && line_num == 1 ) || ( (line_num >= line_arg) && (line_num <= line_arg + row_arg - 1) ) ) {
 
             orig_line = line;
             chomp(line);
@@ -383,7 +424,7 @@ error: return -1;
 // Callback 1 for CSV support, called whenever a field is processed:
 void cb1_x (void *s, size_t len, void *data)
 {
-    if ( full_mode || ((line_num >= line_arg) && (line_num <= line_arg + row_arg - 1)) ) {
+    if ( full_mode || ( header_arg && line_num == 1 ) || ( (line_num >= line_arg) && (line_num <= line_arg + row_arg - 1) ) ) {
 
         DArray *matrix = (DArray *)data;
         int last = DArray_end(matrix) - 1;
@@ -402,7 +443,7 @@ void cb1_x (void *s, size_t len, void *data)
 void cb2_x (int c, void *data)
 {
 
-    if ( full_mode || ((line_num >= line_arg) && (line_num <= line_arg + row_arg - 1)) ) {
+    if ( full_mode || ( header_arg && line_num == 1 ) || ( (line_num >= line_arg) && (line_num <= line_arg + row_arg - 1) ) ) {
         DArray_push((DArray *)data, current_record);
         just_pushed_record = 1;
         current_record = NULL;
@@ -461,9 +502,16 @@ error:
 // Callback 1 for CSV support, called whenever a field is processed:
 void cb1 (void *s, size_t len, void *data)
 {
-    if ( full_mode || ((line_num >= line_arg) && (line_num <= line_arg + row_arg - 1)) ) {
+    size_t nnl = 0;
+
+    if ( full_mode || ( header_arg && line_num == 1 ) || ( (line_num >= line_arg) && (line_num <= line_arg + row_arg - 1) ) ) {
         wchar_t w[len + 1];                       /* VLA */
         swprintf(w, len + 1, L"%s", (char *)s);   /* Convert char to wchar_t */
+
+        nnl = ( wcslen(w) / wrap_len );      // Number of newlines to add
+        wchar_t o[wcslen(w) + (nnl*rlen) + 1];   // VLA
+        wrap(w, o, wrap_len);
+
         check( ft_wwrite((ft_table_t *)data, w) == 0, "Error writing to text table." );
     }
 
@@ -476,10 +524,10 @@ error:
 // Callback 2 for CSV support, called whenever a record is processed:
 void cb2 (int c, void *data)
 {
-    line_num++;
-    if ( full_mode || ((line_num >= line_arg) && (line_num <= line_arg + row_arg - 1)) ) {
+    if ( full_mode || ( header_arg && line_num == 1 ) || ( (line_num >= line_arg) && (line_num <= line_arg + row_arg - 1) ) ) {
         ft_ln((ft_table_t *)data);
     }
+    line_num++;
     ignore_this = c;
 }
 
@@ -531,12 +579,91 @@ error:
     return -1;
 }
 
+/* Process a regular delimited file (multi-char delimiter) */
+int print_table_from_file_multi(char *filename, ft_table_t *table)
+{
+    char *line = NULL;
+    FILE *fp = NULL;
+    size_t len = 0;           // allocated size for line
+    size_t nnl = 0;
+    ssize_t bytes_read = 0;   // num of chars read
+    setlocale(LC_CTYPE, "");  // Avoid printing blank
+
+    line_num = 0;
+
+    if (filename[0] == '-') {
+        fp = stdin;
+    }
+    else {
+        fp = fopen(filename, "rb");
+    }
+
+    check(fp != NULL, "Error opening file: %s.", filename);
+
+    while ((bytes_read = getline(&line, &len, fp)) != -1) {
+
+        line_num++;
+        chomp(line);
+
+        if ( full_mode || ( header_arg && line_num == 1 ) || ( (line_num >= line_arg) && (line_num <= line_arg + row_arg - 1) ) ) {
+
+            // Search for tokens using strstr()
+            char *p = strstr(line, delim);
+            while ( p != NULL )
+            {
+                if (p) 
+                  *p = '\0';
+
+                debug("TOKEN: %s", line);
+                wchar_t w[strlen(line)+1];                 /* VLA */
+                swprintf(w, strlen(line)+1, L"%s", line);  /* Convert char to wchar_t */
+
+                nnl = ( wcslen(w) / wrap_len );      // Number of newlines to add
+                wchar_t o[wcslen(w) + (nnl*rlen) + 1];   // VLA
+                wrap(w, o, wrap_len);
+
+                ft_wwrite(table, o);                       /* Put o on the heap */
+
+                line = p + delim_len;
+                p = strstr(line, delim);
+            }
+            // do one more (past the last delimiter):
+            debug("TOKEN: %s", line);
+            wchar_t w[strlen(line)+1];                 /* VLA */
+            swprintf(w, strlen(line)+1, L"%s", line);  /* Convert char to wchar_t */
+
+            nnl = ( wcslen(w) / wrap_len );      // Number of newlines to add
+            wchar_t o[wcslen(w) + (nnl*rlen) + 1];   // VLA
+            wrap(w, o, wrap_len);
+
+            ft_wwrite(table, o);                       /* Put o on the heap */
+
+            ft_ln(table);
+        }
+        else if ( line_num > line_arg + row_arg - 1 ) {
+            break;
+        }
+    }
+
+    printf("%ls\n", ft_to_wstring(table));
+
+    if ( line != NULL )
+        free(line);
+    fclose(fp);
+
+    return 0;
+
+error:
+    return -1;
+}
+
 /* Process a regular delimited file (single-char delimiter) */
 int print_table_from_file(char *filename, ft_table_t *table)
 {
     char *line = NULL;
     FILE *fp = NULL;
     size_t len = 0;           // allocated size for line
+    size_t nnl = 0;
     ssize_t bytes_read = 0;   // num of chars read
     setlocale(LC_CTYPE, "");  // Avoid printing blank
 
@@ -558,14 +685,19 @@ int print_table_from_file(char *filename, ft_table_t *table)
 
         debug("line=%d, full=%d, min=%d, max=%d", line_num, full_mode, line_arg, line_arg + row_arg - 1);
 
-        if ( full_mode || ((line_num >= line_arg) && (line_num <= line_arg + row_arg - 1)) ) {
+        if ( full_mode || ( header_arg && line_num == 1 ) || ( (line_num >= line_arg) && (line_num <= line_arg + row_arg - 1) ) ) {
 
             char *p = strsep (&line, delim);
             while (p != NULL)
             {
                 wchar_t w[strlen(p)+1];              /* VLA */
                 swprintf(w, strlen(p)+1, L"%s", p);  /* Convert char to wchar_t */
-                ft_wwrite(table, w);                 /* Put w on the heap */
+
+                nnl = ( wcslen(w) / wrap_len );      // Number of newlines to add
+                wchar_t o[wcslen(w) + (nnl*rlen) + 1];   // VLA
+                wrap(w, o, wrap_len);
+
+                ft_wwrite(table, o);                 /* Put o on the heap */
                 p = strsep (&line, delim);
             }
 
@@ -590,73 +722,6 @@ error:
     return -1;
 }
 
-/* Process a regular delimited file (multi-char delimiter) */
-int print_table_from_file_multi(char *filename, ft_table_t *table)
-{
-    char *line = NULL;
-    FILE *fp = NULL;
-    size_t len = 0;           // allocated size for line
-    ssize_t bytes_read = 0;   // num of chars read
-    setlocale(LC_CTYPE, "");  // Avoid printing blank
-
-    line_num = 0;
-
-    if (filename[0] == '-') {
-        fp = stdin;
-    }
-    else {
-        fp = fopen(filename, "rb");
-    }
-
-    check(fp != NULL, "Error opening file: %s.", filename);
-
-    while ((bytes_read = getline(&line, &len, fp)) != -1) {
-
-        line_num++;
-        chomp(line);
-
-        if ( full_mode || ((line_num >= line_arg) && (line_num <= line_arg + row_arg - 1)) ) {
-
-            // Search for tokens using strstr()
-            char *p = strstr(line, delim);
-            while ( p != NULL )
-            {
-                if (p) 
-                  *p = '\0';
-
-                debug("TOKEN: %s", line);
-                wchar_t w[strlen(line)+1];                 /* VLA */
-                swprintf(w, strlen(line)+1, L"%s", line);  /* Convert char to wchar_t */
-                ft_wwrite(table, w);                       /* Put w on the heap */
-
-                line = p + delim_len;
-                p = strstr(line, delim);
-            }
-            // do one more (past the last delimiter):
-            debug("TOKEN: %s", line);
-            wchar_t w[strlen(line)+1];                 /* VLA */
-            swprintf(w, strlen(line)+1, L"%s", line);  /* Convert char to wchar_t */
-            ft_wwrite(table, w);                       /* Put w on the heap */
-            
-            ft_ln(table);
-        }
-        else if ( line_num > line_arg + row_arg - 1 ) {
-            break;
-        }
-    }
-
-    printf("%ls\n", ft_to_wstring(table));
-
-    if ( line != NULL )
-        free(line);
-    fclose(fp);
-
-    return 0;
-
-error:
-    return -1;
-}
-
 
 /* The main function */
 int main (int argc, char *argv[])
@@ -667,7 +732,8 @@ int main (int argc, char *argv[])
     int xpose_arg      = 0;
     int line_arg_flag  = 0;
     int row_arg_flag   = 0;
-    //int add_header_arg = 1;
+
+    rlen = wcslen(rdelim);
 
     /* Loop through the incoming command-line arguments. */
     while (1) {
@@ -675,7 +741,7 @@ int main (int argc, char *argv[])
         // getopt_long stores the option index here.
         int option_index = 0;
 
-        c = getopt_long (argc, argv, "AFHhxCd:Q:l:r:", long_options, &option_index);
+        c = getopt_long (argc, argv, "FHhxCd:l:Q:r:W:", long_options, &option_index);
 
         // Detect the end of the options.
         if (c == -1) break;
@@ -708,9 +774,9 @@ int main (int argc, char *argv[])
                 xpose_arg = 1;
                 break;
 
-            case 'A':
-                debug("option -A");
-                //add_header_arg = 1;
+            case 'W':
+                debug("option -W with value `%s'", optarg);
+                wrap_len = atoi(optarg);
                 break;
 
             case 'F':
@@ -767,10 +833,12 @@ int main (int argc, char *argv[])
      *
      * - When NOT transposing:
      *   - Option -F defaults to ON
-     *     - This causes -l and -r to be ignored
+     *     - If -l or -r are used, -F turns off, unless -F is used also.
      *   - The net default effect is to output the entire file.
      *
      */
+
+    check(wrap_len > 0, "ERROR: Wrap length must be greater than zero (0).");
 
     if ( xpose_arg ) {
         if ( full_mode == -1 ) {
