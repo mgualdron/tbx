@@ -103,6 +103,16 @@ void chomp(char *s) {
     *s = 0;
 }
 
+int replacechar(char *input, char orig, char rep) {
+    char *ix = input;
+    int n = 0;
+    while((ix = strchr(ix, orig)) != NULL) {
+        *ix++ = rep;
+        n++;
+    }
+    return n;
+}
+
 /* Wrap a string to a specified width */
 void wrap(wchar_t *input, wchar_t *output, size_t wlen) 
 {
@@ -162,6 +172,7 @@ void print_table_from_matrix(DArray *matrix)
 
             for (j = 0; j < DArray_count(record); j++) {
                 char *p = (char *)(record->contents[j]);
+                replacechar(p,'\t',' ');             // ft_write() doesn't like TABs
                 wchar_t w[strlen(p)+1];              /* VLA */
                 swprintf(w, strlen(p)+1, L"%s", p);  /* Convert char to wchar_t */
 
@@ -506,6 +517,7 @@ void cb1 (void *s, size_t len, void *data)
 
     if ( full_mode || ( header_arg && line_num == 1 ) || ( (line_num >= line_arg) && (line_num <= line_arg + row_arg - 1) ) ) {
         wchar_t w[len + 1];                       /* VLA */
+        replacechar((char *)s,'\t',' ');          // ft_write() doesn't like TABs
         swprintf(w, len + 1, L"%s", (char *)s);   /* Convert char to wchar_t */
 
         nnl = ( wcslen(w) / wrap_len );      // Number of newlines to add
@@ -615,6 +627,7 @@ int print_table_from_file_multi(char *filename, ft_table_t *table)
                   *p = '\0';
 
                 debug("TOKEN: %s", line);
+                replacechar(line,'\t',' ');          // ft_write() doesn't like TABs
                 wchar_t w[strlen(line)+1];                 /* VLA */
                 swprintf(w, strlen(line)+1, L"%s", line);  /* Convert char to wchar_t */
 
@@ -629,6 +642,7 @@ int print_table_from_file_multi(char *filename, ft_table_t *table)
             }
             // do one more (past the last delimiter):
             debug("TOKEN: %s", line);
+            replacechar(line,'\t',' ');          // ft_write() doesn't like TABs
             wchar_t w[strlen(line)+1];                 /* VLA */
             swprintf(w, strlen(line)+1, L"%s", line);  /* Convert char to wchar_t */
 
@@ -690,6 +704,7 @@ int print_table_from_file(char *filename, ft_table_t *table)
             char *p = strsep (&line, delim);
             while (p != NULL)
             {
+                replacechar(p,'\t',' ');             // ft_write() doesn't like TABs
                 wchar_t w[strlen(p)+1];              /* VLA */
                 swprintf(w, strlen(p)+1, L"%s", p);  /* Convert char to wchar_t */
 
