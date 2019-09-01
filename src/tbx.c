@@ -246,7 +246,7 @@ DArray *transpose( DArray *matrix )
 
         if ( DArray_end(record) > 0 ) {
             char val[INT_SIZE + 7];
-            snprintf(val, INT_SIZE + 7, "RECORD %d", i + 1);
+            snprintf(val, INT_SIZE + 7, "RECORD %d", line_arg + i - 1);
             char *copy = strndup(val, INT_SIZE + 7);
             DArray_push(xhead, copy);
         }
