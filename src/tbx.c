@@ -10,6 +10,7 @@
 #include <string.h>
 #include <locale.h>
 #include <getopt.h>
+//#include <ctype.h>
 #include <wchar.h>
 #include <util/dbg.h>
 #include <util/darray.h>
@@ -35,6 +36,7 @@ static int header_arg = 0;
 static wchar_t *rdelim = L"\n";
 static size_t rlen = 0;
 static int wrap_len   = 50;
+static int text_style = 0;
 
 // The callbacks for CSV processing:
 void cb1 (void *s, size_t len, void *data);
@@ -75,6 +77,7 @@ More than one FILE can be specified.\n\
   -H, --header           process the first line in the file (header)\n\
   -W, --wrap=NUM         wrap each column to this length (default is 50)\n\
   -F, --full             process the whole file (default if not transposing)\n\
+  -T, --text             render table border in plain text\n\
   -h, --help             this help\n\
 ");
     }
@@ -93,6 +96,7 @@ static struct option long_options[] = {
     {"wrap"      , required_argument, 0, 'W'},
     {"header"    , no_argument,       0, 'H'},
     {"full"      , no_argument,       0, 'F'},
+    {"text"      , no_argument,       0, 'T'},
     {"help"      , no_argument,       0, 'h'},
     {0, 0, 0, 0}
 };
@@ -102,6 +106,18 @@ void chomp(char *s) {
     while(*s && *s != '\n' && *s != '\r') s++;
     *s = 0;
 }
+
+/* Check if a string contains numeric data */
+/*
+int isNumeric (const char * s)
+{
+    if (s == NULL || *s == '\0' || isspace(*s))
+      return 0;
+    char * p;
+    strtod (s, &p);
+    return *p == '\0';
+}
+*/
 
 int replacechar(char *input, char orig, char rep) {
     char *ix = input;
@@ -119,17 +135,15 @@ void wrap(wchar_t *input, wchar_t *output, size_t wlen)
     size_t p = 0;
     size_t n = 0;
     size_t nnl = 0;   // number of newlines to add to input
-    size_t olen = 0; // length of the output (with added newlines)
+    size_t olen = wcslen(input);  // output length
 
-    nnl = ( wcslen(input) / wlen );   // Number of newlines to add
-    olen = (wcslen(input) + (nnl*rlen) + 1);
-
-    debug("Input has %ld chars, and wrap length is %d, so %ld newlines will be added for a total of %ld chars.",wcslen(input), WRAP, nnl, olen);
-
-    if ( wcslen(input) <= wlen ) {
-        wcsncpy(output, input, olen);
+    if ( wlen <= 0 || olen <= wlen ) {
+        wcsncpy(output, input, olen + 1);
     }
     else {
+        nnl = ( wcslen(input) / wlen );   // Number of newlines to add
+        olen += (nnl*rlen);
+
         p=0;
         while(1)
         {
@@ -139,7 +153,7 @@ void wrap(wchar_t *input, wchar_t *output, size_t wlen)
             p += rlen;
             n++;
 
-            if ( p >= olen - 1 ) {
+            if ( p >= olen ) {
                 break;
             }
         }
@@ -162,7 +176,12 @@ void print_table_from_matrix(DArray *matrix)
     ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_ROW_TYPE, FT_ROW_HEADER);
 
     /* Change border style */
-    ft_set_border_style(table, FT_NICE_STYLE);
+    if ( text_style ) {
+        ft_set_border_style(table, FT_BASIC_STYLE);
+    }
+    else {
+        ft_set_border_style(table, FT_NICE_STYLE);
+    }
 
     for (i = 0; i < DArray_count(matrix); i++) {
 
@@ -520,8 +539,8 @@ void cb1 (void *s, size_t len, void *data)
         replacechar((char *)s,'\t',' ');          // ft_write() doesn't like TABs
         swprintf(w, len + 1, L"%s", (char *)s);   /* Convert char to wchar_t */
 
-        nnl = ( wcslen(w) / wrap_len );      // Number of newlines to add
-        wchar_t o[wcslen(w) + (nnl*rlen) + 1];   // VLA
+        nnl = ( wcslen(w) / wrap_len );           // Number of newlines to add
+        wchar_t o[wcslen(w) + (nnl*rlen) + 1];    // VLA
         wrap(w, o, wrap_len);
 
         check( ft_wwrite((ft_table_t *)data, w) == 0, "Error writing to text table." );
@@ -545,7 +564,7 @@ void cb2 (int c, void *data)
 
 
 /* Process a CSV file */
-int print_table_from_file_csv(char *filename, ft_table_t *table)
+int print_table_from_file_csv(char *filename)
 {
     struct csv_parser p;
     char buf[1024];
@@ -563,8 +582,18 @@ int print_table_from_file_csv(char *filename, ft_table_t *table)
     }
 
     check(fp != NULL, "Error opening file: %s.", filename);
-    check(csv_init(&p, CSV_APPEND_NULL) == 0, "Error initializing CSV parser.");
 
+    ft_table_t *table = ft_create_table();
+    ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_ROW_TYPE, FT_ROW_HEADER);
+
+    if ( text_style ) {
+        ft_set_border_style(table, FT_BASIC_STYLE);
+    }
+    else {
+        ft_set_border_style(table, FT_NICE_STYLE);
+    }
+
+    check(csv_init(&p, CSV_APPEND_NULL) == 0, "Error initializing CSV parser.");
     csv_set_delim(&p, delim_csv);
     csv_set_quote(&p, quote);
 
@@ -584,6 +613,7 @@ int print_table_from_file_csv(char *filename, ft_table_t *table)
 
     csv_free(&p);
     fclose(fp);
+    ft_destroy_table(table);
 
     return 0;
 
@@ -592,7 +622,7 @@ error:
 }
 
 /* Process a regular delimited file (multi-char delimiter) */
-int print_table_from_file_multi(char *filename, ft_table_t *table)
+int print_table_from_file_multi(char *filename)
 {
     char *line = NULL;
     FILE *fp = NULL;
@@ -611,6 +641,16 @@ int print_table_from_file_multi(char *filename, ft_table_t *table)
     }
 
     check(fp != NULL, "Error opening file: %s.", filename);
+
+    ft_table_t *table = ft_create_table();
+    ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_ROW_TYPE, FT_ROW_HEADER);
+
+    if ( text_style ) {
+        ft_set_border_style(table, FT_BASIC_STYLE);
+    }
+    else {
+        ft_set_border_style(table, FT_NICE_STYLE);
+    }
 
     while ((bytes_read = getline(&line, &len, fp)) != -1) {
 
@@ -664,6 +704,7 @@ int print_table_from_file_multi(char *filename, ft_table_t *table)
     if ( line != NULL )
         free(line);
     fclose(fp);
+    ft_destroy_table(table);
 
     return 0;
 
@@ -672,7 +713,7 @@ error:
 }
 
 /* Process a regular delimited file (single-char delimiter) */
-int print_table_from_file(char *filename, ft_table_t *table)
+int print_table_from_file(char *filename)
 {
     char *line = NULL;
     FILE *fp = NULL;
@@ -691,6 +732,16 @@ int print_table_from_file(char *filename, ft_table_t *table)
     }
 
     check(fp != NULL, "Error opening file: %s.", filename);
+
+    ft_table_t *table = ft_create_table();
+    ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_ROW_TYPE, FT_ROW_HEADER);
+
+    if ( text_style ) {
+        ft_set_border_style(table, FT_BASIC_STYLE);
+    }
+    else {
+        ft_set_border_style(table, FT_NICE_STYLE);
+    }
 
     while ((bytes_read = getline(&line, &len, fp)) != -1) {
 
@@ -730,6 +781,7 @@ int print_table_from_file(char *filename, ft_table_t *table)
     if ( line != NULL )
         free(line);
     fclose(fp);
+    ft_destroy_table(table);
 
     return 0;
 
@@ -748,7 +800,7 @@ int main (int argc, char *argv[])
     int line_arg_flag  = 0;
     int row_arg_flag   = 0;
 
-    rlen = wcslen(rdelim);
+    rlen = wcslen(rdelim);    // The length of the row delimiter (normally 1)
 
     /* Loop through the incoming command-line arguments. */
     while (1) {
@@ -756,7 +808,7 @@ int main (int argc, char *argv[])
         // getopt_long stores the option index here.
         int option_index = 0;
 
-        c = getopt_long (argc, argv, "FHhxCd:l:Q:r:W:", long_options, &option_index);
+        c = getopt_long (argc, argv, "FHhxCTd:l:Q:r:W:", long_options, &option_index);
 
         // Detect the end of the options.
         if (c == -1) break;
@@ -812,6 +864,11 @@ int main (int argc, char *argv[])
             case 'C':
                 debug("option -C");
                 csv_mode = 1;
+                break;
+
+            case 'T':
+                debug("option -T");
+                text_style = 1;
                 break;
 
             case 'Q':
@@ -932,23 +989,19 @@ int main (int argc, char *argv[])
         }
         // Otherwise, don't load to a matrix, go from file to table:
         else {
-            ft_table_t *table = ft_create_table();
-            ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_ROW_TYPE, FT_ROW_HEADER);
-            ft_set_border_style(table, FT_NICE_STYLE);
 
             if (csv_mode) {
-                check(print_table_from_file_csv(filename, table) == 0, "Error counting CSV file: %s", filename);
+                check(print_table_from_file_csv(filename) == 0, "Error counting CSV file: %s", filename);
             }
             else {
                 if ( delim_len > 1 ) {
-                    check(print_table_from_file_multi(filename, table) == 0, "Error processing file: %s", filename);
+                    check(print_table_from_file_multi(filename) == 0, "Error processing file: %s", filename);
                 }
                 else {
-                    check(print_table_from_file(filename, table) == 0, "Error processing file: %s", filename);
+                    check(print_table_from_file(filename) == 0, "Error processing file: %s", filename);
                 }
             }
 
-            ft_destroy_table(table);
         }
 
 
