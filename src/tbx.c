@@ -1,7 +1,7 @@
 // -------------------------------------------------------------------------
 // Program Name:    tbx.c
 //
-// Purpose:         To display a delimited file in a text-formatted table at 
+// Purpose:         To display a delimited file in a text-formatted table at
 //                  the command-line.
 //
 // -------------------------------------------------------------------------
@@ -10,7 +10,7 @@
 #include <string.h>
 #include <locale.h>
 #include <getopt.h>
-//#include <ctype.h>
+#include <ctype.h>
 #include <wchar.h>
 #include <util/dbg.h>
 #include <util/darray.h>
@@ -108,7 +108,6 @@ void chomp(char *s) {
 }
 
 /* Check if a string contains numeric data */
-/*
 int isNumeric (const char * s)
 {
     if (s == NULL || *s == '\0' || isspace(*s))
@@ -117,7 +116,6 @@ int isNumeric (const char * s)
     strtod (s, &p);
     return *p == '\0';
 }
-*/
 
 int replacechar(char *input, char orig, char rep) {
     char *ix = input;
@@ -130,7 +128,7 @@ int replacechar(char *input, char orig, char rep) {
 }
 
 /* Wrap a string to a specified width */
-void wrap(wchar_t *input, wchar_t *output, size_t wlen) 
+void wrap(wchar_t *input, wchar_t *output, size_t wlen)
 {
     size_t p = 0;
     size_t n = 0;
@@ -192,6 +190,9 @@ void print_table_from_matrix(DArray *matrix)
             for (j = 0; j < DArray_count(record); j++) {
                 char *p = (char *)(record->contents[j]);
                 replacechar(p,'\t',' ');             // ft_write() doesn't like TABs
+                if ( isNumeric(p) ) {
+                    ft_set_cell_prop(table, i, j, FT_CPROP_TEXT_ALIGN, FT_ALIGNED_RIGHT);
+                }
                 wchar_t w[strlen(p)+1];              /* VLA */
                 swprintf(w, strlen(p)+1, L"%s", p);  /* Convert char to wchar_t */
 
@@ -417,7 +418,7 @@ int file_load_multi(char *filename, DArray *matrix)
             char *p = strstr(line, delim);
             while ( p != NULL )
             {
-                if (p) 
+                if (p)
                   *p = '\0';
 
                 char *cell = strdup(line);
@@ -663,7 +664,7 @@ int print_table_from_file_multi(char *filename)
             char *p = strstr(line, delim);
             while ( p != NULL )
             {
-                if (p) 
+                if (p)
                   *p = '\0';
 
                 debug("TOKEN: %s", line);
@@ -892,7 +893,7 @@ int main (int argc, char *argv[])
                 usage(1);
         }
     }
-    
+
 
     /*
      * Notes:
@@ -960,7 +961,7 @@ int main (int argc, char *argv[])
         debug("The input filename is %s\n", filename);
 
 
-        // If we are transposing, load the file into a dynamic 2D array 
+        // If we are transposing, load the file into a dynamic 2D array
         // first, then transpose it, and print it:
         if (xpose_arg) {
             DArray *matrix = DArray_create(sizeof(DArray *), 10);
