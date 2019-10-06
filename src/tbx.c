@@ -79,7 +79,7 @@ More than one FILE can be specified.\n\
   -H, --header           process the first line in the file (header)\n\
   -w, --wchar            assume wide characters are present in the input\n\
   -W, --wrap=NUM         wrap each column to this length (default is 50)\n\
-  -F, --full             process the whole file (default if not transposing)\n\
+  -F, --full             process the whole file\n\
   -T, --text             render table border in plain text\n\
   -h, --help             this help\n\
 ");
