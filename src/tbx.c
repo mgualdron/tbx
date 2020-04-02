@@ -394,7 +394,7 @@ static int DArray_maxcols( DArray *matrix )
 /* Transpose the 2-D array and return another 2-D array */
 static DArray *transpose( DArray *matrix )
 {
-    int i, j;
+    int i, j, rec_num;
     DArray *xpose  = DArray_create(sizeof(DArray *), 10);
     DArray *record = DArray_create(sizeof(char *), 10);
     DArray *xhead  = DArray_create(sizeof(char *), 10);
@@ -406,6 +406,8 @@ static DArray *transpose( DArray *matrix )
     copy = strdup("FIELD NAMES");
     DArray_push(xhead, copy);
 
+    rec_num = line_arg == 1 ? 2 : line_arg;
+
     /* The Header */
     for (i = 0; i < DArray_count(matrix) - 1; i++) {
 
@@ -413,7 +415,7 @@ static DArray *transpose( DArray *matrix )
 
         if ( DArray_end(record) > 0 ) {
             char val[INT_SIZE + 7];
-            snprintf(val, INT_SIZE + 7, "RECORD %d", line_arg + i - 1);
+            snprintf(val, INT_SIZE + 7, "RECORD %d", rec_num + i - 1);
             char *copy = strndup(val, INT_SIZE + 7);
             DArray_push(xhead, copy);
         }
