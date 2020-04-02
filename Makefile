@@ -51,6 +51,8 @@ clean:
 install: all
 	install -d $(PREFIX)/bin/
 	install $(TARGET_BIN) $(PREFIX)/bin/
+	install -d $(PREFIX)/man/man1/
+	install man/tbx.1 $(PREFIX)/man/man1/
 
 # The Checker
 check:
