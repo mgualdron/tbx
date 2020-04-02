@@ -35,7 +35,7 @@ static int full_mode  = -1;
 static int line_arg   = 1;
 static int row_arg    = 1;
 static int header_arg = 0;
-static int wchar_mode  = 0;
+static int wchar_mode  = 1;
 static char *rdelim = "\n";
 static wchar_t *wrdelim = L"\n";
 static size_t rlen = 0;
@@ -70,18 +70,18 @@ More than one FILE can be specified.\n\
 
       printf ("\
 \n\
-  -d, --delimiter=DELIM  the delimiting character for the input FILE(s)\n\
-  -C  --csv              parse CSV files\n\
-  -Q, --csv-quote        CSV quoting character (ignored unless --csv)\n\
-  -x, --transpose        transpose the output\n\
-  -l, --from-line=NUM    process starting from this line number\n\
-  -r, --row-number=NUM   process this number of rows starting at -l\n\
-  -H, --header           process the first line in the file (header)\n\
-  -w, --wchar            assume wide characters are present in the input\n\
-  -W, --wrap=NUM         wrap each column to this length (default is 50)\n\
-  -F, --full             process the whole file\n\
-  -T, --text             render table border in plain text\n\
-  -h, --help             this help\n\
+  -d, --delim=DELIM    the delimiting character for the input FILE(s)\n\
+  -C, --csv            parse CSV files\n\
+  -Q, --csv-quote      CSV quoting character (ignored unless --csv)\n\
+  -x, --transpose      transpose the output\n\
+  -l, --from-line=NUM  process starting from this line number (default is 1)\n\
+  -r, --rows=NUM       process this many rows starting at -l (default is 10 or 1 if -x)\n\
+  -H, --header         include the first line in the file (header) -- not always needed\n\
+  -N, --no-wchar       process the input as non-wide chars (not recommended)\n\
+  -w, --wrap=NUM       wrap each column to this length (default is 50)\n\
+  -F, --full           process the whole file (ignoring -r)\n\
+  -T, --text           render table border in plain text\n\
+  -h, --help           this help\n\
 ");
     }
 
@@ -91,13 +91,13 @@ More than one FILE can be specified.\n\
 
 static struct option long_options[] = {
     {"csv"       , no_argument,       0, 'C'},
-    {"delimiter" , required_argument, 0, 'd'},
+    {"delim"     , required_argument, 0, 'd'},
     {"csv-quote" , required_argument, 0, 'Q'},
     {"transpose" , no_argument,       0, 'x'},
     {"from-line" , required_argument, 0, 'l'},
     {"rows"      , required_argument, 0, 'r'},
-    {"wrap"      , required_argument, 0, 'W'},
-    {"wchar"     , no_argument,       0, 'w'},
+    {"wrap"      , required_argument, 0, 'w'},
+    {"no-wchar"  , no_argument,       0, 'N'},
     {"header"    , no_argument,       0, 'H'},
     {"full"      , no_argument,       0, 'F'},
     {"text"      , no_argument,       0, 'T'},
@@ -703,7 +703,7 @@ int main (int argc, char *argv[])
         // getopt_long stores the option index here.
         int option_index = 0;
 
-        c = getopt_long (argc, argv, "FHhwxCTd:l:Q:r:W:", long_options, &option_index);
+        c = getopt_long (argc, argv, "FHhNxCTd:l:Q:r:w:", long_options, &option_index);
 
         // Detect the end of the options.
         if (c == -1) break;
@@ -735,13 +735,13 @@ int main (int argc, char *argv[])
                 xpose_arg = 1;
                 break;
 
-            case 'w':
-                debug("option -w");
-                wchar_mode = 1;
+            case 'N':
+                debug("option -N");
+                wchar_mode = 0;
                 break;
 
-            case 'W':
-                debug("option -W with value `%s'", optarg);
+            case 'w':
+                debug("option -w with value `%s'", optarg);
                 wrap_len = atoi(optarg);
                 break;
 
@@ -797,13 +797,13 @@ int main (int argc, char *argv[])
      * Notes:
      *
      * - When transposing:
-     *   - Option -H defaults to ON
+     *   - Option -H defaults to OFF
      *   - Option -l defaults to 1
      *   - Option -r defaults to 1
      *   - The net default effect is to output the first row in the file (the header)
 
      * - When NOT transposing:
-     *   - Option -H defaults to ON
+     *   - Option -H defaults to OFF
      *   - Option -l defaults to 1
      *   - Option -r defaults to 10
      *   - The net default effect is to output the first 10 rows in the file 
