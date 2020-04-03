@@ -35,7 +35,7 @@ static int full_mode  = -1;
 static int line_arg   = 1;
 static int row_arg    = 1;
 static int header_arg = 0;
-static int wchar_mode  = 1;
+static int wchar_mode  = 0;
 static char *rdelim = "\n";
 static wchar_t *wrdelim = L"\n";
 static size_t rlen = 0;
@@ -73,12 +73,12 @@ More than one FILE can be specified.\n\
   -d, --delim=DELIM    the delimiting character for the input FILE(s)\n\
   -C, --csv            parse CSV files\n\
   -Q, --csv-quote      CSV quoting character (ignored unless --csv)\n\
+  -H, --header         include the first line in the file (header) -- not always needed\n\
   -x, --transpose      transpose the output\n\
   -l, --from-line=NUM  process starting from this line number (default is 1)\n\
   -r, --rows=NUM       process this many rows starting at -l (default is 10 or 1 if -x)\n\
-  -H, --header         include the first line in the file (header) -- not always needed\n\
-  -N, --no-wchar       process the input as non-wide chars (not recommended)\n\
   -w, --wrap=NUM       wrap each column to this length (default is 50)\n\
+  -W, --wchar          process the input as wide characters\n\
   -F, --full           process the whole file (ignoring -r)\n\
   -T, --text           render table border in plain text\n\
   -h, --help           this help\n\
@@ -97,7 +97,7 @@ static struct option long_options[] = {
     {"from-line" , required_argument, 0, 'l'},
     {"rows"      , required_argument, 0, 'r'},
     {"wrap"      , required_argument, 0, 'w'},
-    {"no-wchar"  , no_argument,       0, 'N'},
+    {"wchar"     , no_argument,       0, 'W'},
     {"header"    , no_argument,       0, 'H'},
     {"full"      , no_argument,       0, 'F'},
     {"text"      , no_argument,       0, 'T'},
@@ -232,7 +232,7 @@ static int table_from_matrix(DArray *matrix)
     int i, j, nnl;
     DArray *record;
 
-    setlocale(LC_CTYPE, "");  // Set the original value
+    // setlocale(LC_CTYPE, "");  // Set the original value
     // printf("Locale is set to %s\n", lc_ctype);
 
     /* The table to be displayed */
@@ -267,7 +267,7 @@ static int table_from_matrix(DArray *matrix)
                 char o[strlen(p) + (nnl*rlen) + 1];  // VLA
                 wrap(p, o, wrap_len);
 
-                ft_write(table, o);                 /* Put o on the heap */
+                ft_u8write(table, o);                 /* Put o on the heap */
             }
 
             ft_ln(table);
@@ -395,9 +395,9 @@ static int DArray_maxcols( DArray *matrix )
 static DArray *transpose( DArray *matrix )
 {
     int i, j, rec_num;
-    DArray *xpose  = DArray_create(sizeof(DArray *), 10);
-    DArray *record = DArray_create(sizeof(char *), 10);
-    DArray *xhead  = DArray_create(sizeof(char *), 10);
+    DArray *xpose  = DArray_create(sizeof(DArray *), DEFAULT_ROWS);
+    DArray *record = DArray_create(sizeof(char *), DEFAULT_ROWS);
+    DArray *xhead  = DArray_create(sizeof(char *), DEFAULT_ROWS);
     char *copy = NULL;
     char *blank = strdup("");  /* a heap-allocated empty string */
 
@@ -425,7 +425,7 @@ static DArray *transpose( DArray *matrix )
 
     for (j = 0; j < DArray_maxcols(matrix); j++) {
 
-        DArray *xrec = DArray_create(sizeof(char *), 10);
+        DArray *xrec = DArray_create(sizeof(char *), DEFAULT_ROWS);
 
         for (i = 0; i < DArray_count(matrix); i++) {
 
@@ -506,7 +506,7 @@ static int file_load(char *filename, DArray *matrix)
 
         if ( full_mode || ( header_arg && line_num == 1 ) || ( (line_num >= line_arg) && (line_num <= line_arg + row_arg - 1) ) ) {
 
-            DArray *record = DArray_create(sizeof(char *), 10);
+            DArray *record = DArray_create(sizeof(char *), DEFAULT_ROWS);
 
             char *p = strsep (&line, delim);
             while (p != NULL)
@@ -563,7 +563,7 @@ static int file_load_multi(char *filename, DArray *matrix)
             orig_line = line;
             chomp(line);
 
-            DArray *record = DArray_create(sizeof(char *), 10);
+            DArray *record = DArray_create(sizeof(char *), DEFAULT_ROWS);
 
             // Search for tokens using strstr()
             char *p = strstr(line, delim);
@@ -612,7 +612,7 @@ static void cb1_x (void *s, size_t len, void *data)
         int last = DArray_end(matrix) - 1;
 
         if ( (last == -1 && current_record == NULL) || just_pushed_record ) {
-            current_record = DArray_create(sizeof(char *), 10);
+            current_record = DArray_create(sizeof(char *), DEFAULT_ROWS);
             just_pushed_record = 0;
         }
 
@@ -705,7 +705,7 @@ int main (int argc, char *argv[])
         // getopt_long stores the option index here.
         int option_index = 0;
 
-        c = getopt_long (argc, argv, "FHhNxCTd:l:Q:r:w:", long_options, &option_index);
+        c = getopt_long (argc, argv, "FHhWxCTd:l:Q:r:w:", long_options, &option_index);
 
         // Detect the end of the options.
         if (c == -1) break;
@@ -737,9 +737,9 @@ int main (int argc, char *argv[])
                 xpose_arg = 1;
                 break;
 
-            case 'N':
-                debug("option -N");
-                wchar_mode = 0;
+            case 'W':
+                debug("option -W");
+                wchar_mode = 1;
                 break;
 
             case 'w':
@@ -807,8 +807,8 @@ int main (int argc, char *argv[])
      * - When NOT transposing:
      *   - Option -H defaults to OFF
      *   - Option -l defaults to 1
-     *   - Option -r defaults to 10
-     *   - The net default effect is to output the first 10 rows in the file 
+     *   - Option -r defaults to DEFAULT_ROWS
+     *   - The net default effect is to output the first DEFAULT_ROWS rows in the file 
      *     (like the head command)
      *
      */
@@ -856,7 +856,8 @@ int main (int argc, char *argv[])
         debug("The input filename is %s\n", filename);
 
         /* Load the data into a matrix first */
-        DArray *matrix = DArray_create(sizeof(DArray *), 10);
+        DArray *matrix = DArray_create(sizeof(DArray *), DEFAULT_ROWS);
+
         if (csv_mode) {
             debug("Selected CSV mode");
             check(file_load_csv(filename, matrix) == 0, "Error loading csv file: %s", filename);
@@ -884,16 +885,7 @@ int main (int argc, char *argv[])
                 retval = table_from_matrix(xpose);
             }
 
-            /*
-            retval = wtable_from_matrix(xpose);
-            if ( retval && wchar_mode ) {
-                retval = table_from_matrix(xpose);
-            }
-            */
-
             master_destroy(xpose);
-
-
         }
         else {
 
@@ -903,15 +895,8 @@ int main (int argc, char *argv[])
             else {
                 retval = table_from_matrix(matrix);
             }
-
-            /*
-            retval = wtable_from_matrix(matrix);
-            if (retval) {
-                retval = table_from_matrix(matrix);
-            }
-            */
-
         }
+
         master_destroy(matrix);
         check(retval == 0, "Error creating table.");
 
