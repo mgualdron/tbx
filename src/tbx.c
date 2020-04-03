@@ -35,7 +35,7 @@ static int full_mode  = -1;
 static int line_arg   = 1;
 static int row_arg    = 1;
 static int header_arg = 0;
-static int wchar_mode  = 0;
+static int wchar_mode  = 1;
 static char *rdelim = "\n";
 static wchar_t *wrdelim = L"\n";
 static size_t rlen = 0;
@@ -78,7 +78,7 @@ More than one FILE can be specified.\n\
   -l, --from-line=NUM  process starting from this line number (default is 1)\n\
   -r, --rows=NUM       process this many rows starting at -l (default is 10 or 1 if -x)\n\
   -w, --wrap=NUM       wrap each column to this length (default is 50)\n\
-  -W, --wchar          process the input as wide characters\n\
+  -N, --no-wchar       process the input as non-wide characters (not as reliable)\n\
   -F, --full           process the whole file (ignoring -r)\n\
   -T, --text           render table border in plain text\n\
   -h, --help           this help\n\
@@ -97,7 +97,7 @@ static struct option long_options[] = {
     {"from-line" , required_argument, 0, 'l'},
     {"rows"      , required_argument, 0, 'r'},
     {"wrap"      , required_argument, 0, 'w'},
-    {"wchar"     , no_argument,       0, 'W'},
+    {"no-wchar"  , no_argument,       0, 'N'},
     {"header"    , no_argument,       0, 'H'},
     {"full"      , no_argument,       0, 'F'},
     {"text"      , no_argument,       0, 'T'},
@@ -705,7 +705,7 @@ int main (int argc, char *argv[])
         // getopt_long stores the option index here.
         int option_index = 0;
 
-        c = getopt_long (argc, argv, "FHhWxCTd:l:Q:r:w:", long_options, &option_index);
+        c = getopt_long (argc, argv, "FHhNxCTd:l:Q:r:w:", long_options, &option_index);
 
         // Detect the end of the options.
         if (c == -1) break;
@@ -737,9 +737,9 @@ int main (int argc, char *argv[])
                 xpose_arg = 1;
                 break;
 
-            case 'W':
+            case 'N':
                 debug("option -W");
-                wchar_mode = 1;
+                wchar_mode = 0;
                 break;
 
             case 'w':
