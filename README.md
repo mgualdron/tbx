@@ -13,10 +13,18 @@ Usage: tbx [OPTION]... [FILE]...
 Display a delimited file in tabular form.
 More than one FILE can be specified.
 
-  -d, --delimiter=DELIM  the delimiting character for the input FILE(s)
-  -C  --csv              parse CSV files
-  -Q, --csv-quote        CSV quoting character (ignored unless --csv)
-  -x, --transpose        transpose the output
+  -d, --delim=DELIM    the delimiting character for the input FILE(s)
+  -C, --csv            parse CSV files
+  -Q, --csv-quote      CSV quoting character (ignored unless --csv)
+  -H, --header         include the first line in the file (header) -- not always needed
+  -x, --transpose      transpose the output
+  -l, --from-line=NUM  process starting from this line number (default is 1)
+  -r, --rows=NUM       process this many rows starting at -l (default is 10 or 1 if -x)
+  -w, --wrap=NUM       wrap each column to this length (default is 50)
+  -N, --no-wchar       process the input as non-wide characters (not as reliable)
+  -F, --full           process the whole file (ignoring -r)
+  -T, --text           render table border in plain text
+  -h, --help           this help
 ```
 
 ## Examples
@@ -114,17 +122,17 @@ Make the binary as follows:
 ```
 cd tbx
 
-make
+make && make install
 ```
 
-Copy it somewhere in your path, like `$HOME/bin`:
+Please check the Makefile to adjust the target location. See the manual page for details on available options.
+
+If you'd like to read the manual page without installing it you can do so as follows:
 
 ```
-cp ./bin/tbx $HOME/bin
+man ./man/tbx.1
 ```
 
-## TODO
+## Author
 
-Limit the number of records processed, so the program can display selected 
-rows from a file.
-
+Miguel Gualdron (dev at gualdron.com).

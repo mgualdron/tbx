@@ -1,20 +1,138 @@
 .\" Manpage for tbx.
 .\" Contact dev@gualdron.com to correct errors or typos.
-.TH man 8 "02 April 2020" "1.0" "tbx man page"
+.TH tbx 1 "02 April 2020" "1.0" "tbx Manual Page"
 .SH NAME
-tbx \- Tabulate a delimited file at the command-line
+tbx \- Tabulate a delimited file at the command\-line
 .SH SYNOPSIS
-tbx [OPTIONS] FILE [FILES]
+.nf
+.BR tbx " [\fIoption\fP] \fIfile\fP [\fIfiles...\fP] "
 .SH DESCRIPTION
-tbx displays a delimited file in tabular form
+tbx displays delimited data in tabular form. It supports files with fields delimited by one or more characters, or files following CSV rules delimited by a single character.  It works well with UTF-8 encoded files.  YMMV with other encodings.  \fBiconv (1)\fR is your friend.
 .SH OPTIONS
-tbx takes many options.
+tbx takes several options.
+.TP
+.BR \-d ", " \-\-delim=<char>
+Sets the delimiting character to use when parsing the file.  The default value is a TAB character.  However when using the \fB--csv\fR option the default value is a comma.
+.TP
+.BR \-C ", " \-\-csv
+Parse CSV files.
+.TP
+.BR \-Q ", " \-\-csv\-quote=<char>
+Sets the CSV quoting character when the \fB--csv\fR option is used.  The default value is a double-quote.
+.TP
+.BR \-H ", " \-\-header
+Include the first line of the file in the output (pressumably the header).  Note that this is not necessary if you are listing from line 1 (\fB--from-line=1\fR), which is the default.
+.TP
+.BR \-x ", " \-\-transpose
+Transpose the output so that file records are displayed as columns.  This is useful for inspecting a small number of rows from a wide file.
+.TP
+.BR \-l ", " \-\-from\-line=<num>
+Specify the line number in the input to start processing.  The default value is 1.
+.TP
+.BR \-r ", " \-\-rows=<num>
+Process this many rows starting from the \fB-l\fR value.  The default is 10, however, if \fB-x\fR is used, the default becomes 1.
+.IP
+If neither \fB-l\fR or \fB-r\fR are specified, processing starts with the first line in the file, and either 10 or 1 lines are displayed depending on whether \fB-x\fR is used.
+.TP
+.BR \-w ", " \-\-wrap=<num>
+Wrap each column (by adding newlines) to this width.  This can be adjusted to prevent the table from exceeding the width of your terminal.  The default value is 50.
+.TP
+.BR \-N ", " \-\-no\-wchar
+The \fBlibfort\fR library that \fBtbx\fR relies on is currently more reliable when processing Unicode as Wide Characters (this is the default).  However, if you would like to try the \fBUTF-8\fR table functions use this flag.
+.TP
+.BR \-F ", " \-\-full
+Process the full file (ignoring \fB-r\fR).  Note that the data to be tabulated is loaded into memory, so, if you're trying to display a very large file, you may run out of memory.
+.IP
+The intent of \fBtbx\fR is not to display large amounts of data, but to zero-in on a small number of rows specified by judicious use of \fB-l\fR and \fB-r\fR.
+.TP
+.BR \-T ", " \-\-text
+Render the table border in plain text.  The default is to use ANSI characters.
+.TP
+.BR \-h ", " \-\-help
+Display a short help message with an option summary.
 .SH EXAMPLES
-The simplest way to use tbx is to simply call it with a file name.
+The easiest way to use tbx is to simply call it with the name of a tab-delimited file.
+.TP
+Let's say our file is \fBtest_file.tab\fR.
+.TP
+.EX
+cat test_file.tab
+
+HEADER_1        HEADER_2        HEADER_3        HEADER_4        HEADER_5
+COL1ROW1        COL2ROW1        COL3ROW1        COL4ROW1        COL5ROW1
+COL1ROW2        COL2ROW2        COL3ROW2        COL4ROW2        COL5ROW2
+COL1ROW3        COL2ROW3        COL3ROW3        COL4ROW3        COL5ROW3
+COL1ROW4        COL2ROW4        COL3ROW4        COL4ROW4        COL5ROW4
+COL1ROW5        COL2ROW5        COL3ROW5        COL4ROW5        COL5ROW5
+COL1ROW6        COL2ROW6        COL3ROW6        COL4ROW6        COL5ROW6
+.EE
+.TP
+You can tabulate this as follows:
+.TP
+.EX
+tbx test_file.tab
+
+╔══════════╦══════════╦══════════╦══════════╦══════════╗
+║ HEADER_1 ║ HEADER_2 ║ HEADER_3 ║ HEADER_4 ║ HEADER_5 ║
+╠══════════╬══════════╬══════════╬══════════╬══════════╣
+║ COL1ROW1 ║ COL2ROW1 ║ COL3ROW1 ║ COL4ROW1 ║ COL5ROW1 ║
+║ COL1ROW2 ║ COL2ROW2 ║ COL3ROW2 ║ COL4ROW2 ║ COL5ROW2 ║
+║ COL1ROW3 ║ COL2ROW3 ║ COL3ROW3 ║ COL4ROW3 ║ COL5ROW3 ║
+║ COL1ROW4 ║ COL2ROW4 ║ COL3ROW4 ║ COL4ROW4 ║ COL5ROW4 ║
+║ COL1ROW5 ║ COL2ROW5 ║ COL3ROW5 ║ COL4ROW5 ║ COL5ROW5 ║
+║ COL1ROW6 ║ COL2ROW6 ║ COL3ROW6 ║ COL4ROW6 ║ COL5ROW6 ║
+╚══════════╩══════════╩══════════╩══════════╩══════════╝
+.EE
+.TP
+If we have a large CSV file, which might be too wide to fit on the terminal, we can still see the fie layout by using the transpose (\fB-x\fR) option as follows:
+.TP
+.EX
+tbx -x --csv fake_address_data.csv
+
+╔═════╦═════════════╗
+║ COL ║ FIELD NAMES ║
+╠═════╬═════════════╣
+║   1 ║ NAME        ║
+║   2 ║ PHONE       ║
+║   3 ║ EMAIL       ║
+║   4 ║ COMPANY     ║
+║   5 ║ ORG_ID      ║
+║   6 ║ ADDRESS     ║
+║   7 ║ CITY        ║
+║   8 ║ POST_CODE   ║
+║   9 ║ REGION      ║
+║  10 ║ COUNTRY     ║
+║  11 ║ COORDINATES ║
+╚═════╩═════════════╝
+.EE
+.TP
+If we also want to see two records starting at line 25:
+.TP
+.EX
+tbx --csv -x -l25 -r2 -H fake_address_data.csv
+
+╔═════╦═════════════╦═════════════════════════════════╦══════════════════════════╗
+║ COL ║ FIELD NAMES ║ RECORD 24                       ║ RECORD 25                ║
+╠═════╬═════════════╬═════════════════════════════════╬══════════════════════════╣
+║   1 ║ NAME        ║ Xandra                          ║ Deborah                  ║
+║   2 ║ PHONE       ║ (0111) 939 2776                 ║ (01508) 93790            ║
+║   3 ║ EMAIL       ║ Duis@lorem.edu                  ║ egestas.Fusce@risusa.edu ║
+║   4 ║ COMPANY     ║ Ultricies Institute             ║ Luctus Ut LLP            ║
+║   5 ║ ORG_ID      ║ 597661 6069                     ║ 169192 0696              ║
+║   6 ║ ADDRESS     ║ P.O. Box 789, 6793 Morbi Avenue ║ 1654 In Av.              ║
+║   7 ║ CITY        ║ Bautzen                         ║ Meridian                 ║
+║   8 ║ POST_CODE   ║                            1643 ║ 80593-285                ║
+║   9 ║ REGION      ║ SN                              ║ ID                       ║
+║  10 ║ COUNTRY     ║ Lesotho                         ║ Fiji                     ║
+║  11 ║ COORDINATES ║ -63.23149, -134.02611           ║ -2.98065, 75.3971        ║
+╚═════╩═════════════╩═════════════════════════════════╩══════════════════════════╝
+.EE
+.TP
+Note that we're using the \fB-H\fR option to display the header along with our data.
 .SH SEE ALSO
-csv(3)
+\fBcsv(3)\fR
 .SH BUGS
 No known bugs.
 .SH AUTHOR
-Miguel Gualdron (dev@gualdron.com)
+Miguel Gualdron (dev at gualdron.com)
 
