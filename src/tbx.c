@@ -504,7 +504,10 @@ static int file_load(char *filename, DArray *matrix)
         line_num++;
         chomp(line);
 
-        if ( full_mode || ( header_arg && line_num == 1 ) || ( (line_num >= line_arg) && (line_num <= line_arg + row_arg - 1) ) ) {
+        if ( full_mode ||
+                ( header_arg && line_num == 1 ) ||
+                ( (line_num >= line_arg) &&
+                  (line_num <= line_arg + row_arg - 1) ) ) {
 
             DArray *record = DArray_create(sizeof(char *), DEFAULT_ROWS);
 
