@@ -1,4 +1,24 @@
+2021-02-11: Added more Autotools-related files.
+2021-02-11: Documentation changes for Autotools.
+2021-02-11: Minor change to support Autotools.
+2021-02-11: Merge branch 'autotools'
+2021-02-11: Re-adding copyright notices and GPLv3.
+2021-02-11: Merge branch 'master' of https://github.com/mgualdron/tbx
+2021-02-11: Script runtests.sh is no longer needed under Autotools.
+2021-02-11: Added new files needed by Autotools.
+2021-02-11: Added one more entry from Autotools.
+2021-02-11: Added support for config.h from Autotools.
+2021-02-11: Moved utility source code into its ows subdir.
+2021-02-11: Removing Makefile in lieu of Makefile.am.
 2021-01-27: Minor reformatting for readability.
+2020-06-13: Added some details about the -F option.
+2020-06-12: Added GPLv2.
+2020-06-12: Added GPLv2.
+2020-06-12: Added GPLv2.
+2020-06-12: Added MIT Licensing as described by Zed Shaw.
+2020-06-12: Added MIT Licensing as described by Zed Shaw.
+2020-06-12: Added MIT Licensing as described by Zed Shaw.
+2020-06-12: Added the tags file.
 2020-04-08: Documentation updates.
 2020-04-03: Replaced -W with -N once more.
 2020-04-03: Added support for UTF-8, and replaced -N with -W.
