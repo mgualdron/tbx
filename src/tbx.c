@@ -12,11 +12,10 @@
 #include <getopt.h>
 #include <ctype.h>
 #include <wchar.h>
-#include <csv.h>
-#include <fort.h>
 #include <util/dbg.h>
 #include <util/darray.h>
-#include "config.h"
+#include <csv.h>
+#include <fort.h>
 #define INT_SIZE 16
 #define DEFAULT_ROWS 10
 #define IS_CTRL  (1 << 0)
@@ -115,7 +114,7 @@ static void chomp(char *s) {
 /* Check if a string contains numeric data */
 static int isNumeric (const char * s)
 {
-    if (s == NULL || *s == '\0' || isspace((unsigned int)*s))
+    if (s == NULL || *s == '\0' || isspace(*s))
       return 0;
     char * p;
     strtod (s, &p);
@@ -913,3 +912,24 @@ int main (int argc, char *argv[])
 error:
     return -1;
 }
+/*
+ *
+ * Copyright (C) 2020 Miguel Gualdron
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * See the file COPYING in this distribution, or http://www.gnu.org/licenses/gpl.txt
+ *
+ */
