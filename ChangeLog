@@ -1,0 +1,36 @@
+2021-01-27: Minor reformatting for readability.
+2020-04-08: Documentation updates.
+2020-04-03: Replaced -W with -N once more.
+2020-04-03: Added support for UTF-8, and replaced -N with -W.
+2020-04-03: Support for UTF-8.
+2020-04-02: Minor fix to record number displayed while transposing data.
+2020-04-01: Added manpage installation.
+2020-04-01: Started the manual page.
+2020-04-01: Reversed the wcahe option, and changed -W to -w for ease of typing.
+2020-04-01: Added a couple of entries that won't need tracking.
+2019-10-05: Minor adjustment to -h output.
+2019-09-30: Simplified the code by loading to a 2-D matrix first regardless of outcome.
+2019-09-10: Added ringh-justification for numeric fields.
+2019-09-09: Added -T option to output plain text borders.
+2019-09-01: Minor adjustment to transpose header labels.
+2019-08-30: Added removal of TAB chracters since ft_write() seems to have trouble with them.
+2019-08-30: Added support for line-wrapping field entries based on the -W option.
+2019-08-29: Added support for -l, -r, and --full to file_load_csv().
+2019-08-29: Added support for -l, -r, and --full to file_load_multi().
+2019-08-29: Added support for -l, -r, and --full to file_load().
+2019-08-29: Added support for -l, -r, and --full to print_table_from_file_csv().
+2019-08-29: Added support for -l, -r, and --full to print_table_from_file() and print_table_from_file_multi().
+2019-08-08: Added static linking against libcsv.a
+2019-08-08: Added support for multi-character delimiters for non-CSV files.
+2019-08-07: Added two global variables to better keep track of CSV records being processed.
+2019-08-07: Minor adjustment.
+2019-08-01: Added description of transposition.
+2019-08-01: Added support for transposition.
+2019-08-01: Removed logging files.
+2019-08-01: Added test logging output files.
+2019-08-01: Added support for wide character types.
+2019-07-27: Rearranging to standard directory locations within the project.
+2019-07-05: Minor fixes.
+2019-07-05: Minor doc change.
+2019-07-05: Initial checkin.
+2019-07-05: Initial commit
