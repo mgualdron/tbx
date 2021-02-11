@@ -125,25 +125,46 @@ See the included manual page for more details and examples.
 
 ## Building tbx
 
-Install the following required libraries in your `$HOME/local` directory:
+Install the following required libraries.
 
 - [libcsv](https://github.com/rgamble/libcsv)
 - [libfort](https://github.com/seleznevae/libfort)
 
-Make the binary as follows:
+These can be installed in the standard system locations or in your `$HOME` directory.
+
+Note that the git repository does not include a `configure` script like a 
+distribution tarball normally does.  If you don't want to bother with 
+installing `autoconf` and `automake`, then download a distribution package 
+and run `configure`:
 
 ```
-cd tbx
-
-make && make install
+./configure
 ```
 
-Please check the Makefile to adjust the target location. See the manual page for details on available options.
-
-If you'd like to read the manual page without installing it you can do so as follows:
+Note that if some of the required libraries are in your `$HOME` directory, 
+and if you also want the `tbx` binary installed in your `$HOME/bin`, you should 
+run something like:
 
 ```
-man ./man/tbx.1
+./configure CPPFLAGS="-I$HOME/include" LDFLAGS="-L$HOME/lib" --prefix=$HOME
+```
+
+If you're building from a copy of the git repository, you'll need to have 
+`autoconf` and `automake` installed on your system, and run the following 
+command to generate a `configure` script:
+
+```
+autoreconf -i
+```
+
+...and subsequently run `configure` as mentioned before.
+
+After `configure` completes successfully, you can do the usual:
+
+```
+make
+make check
+make install
 ```
 
 ## Author
