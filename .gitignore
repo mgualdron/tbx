@@ -58,3 +58,20 @@ dkms.conf
 
 # Test ouput
 *.log
+
+# Distribution files
+*.tar.gz
+
+# Autotools stuff
+*.trs
+aclocal.m4
+autom4te.cache
+build-aux
+.deps
+.dirstamp
+config.h
+config.h.in
+config.status
+configure
+Makefile.in
+stamp-h1
