@@ -63,6 +63,7 @@ dkms.conf
 *.tar.gz
 
 # Autotools stuff
+*~
 *.trs
 aclocal.m4
 autom4te.cache
