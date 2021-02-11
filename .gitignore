@@ -73,5 +73,6 @@ config.h
 config.h.in
 config.status
 configure
+Makefile
 Makefile.in
 stamp-h1
