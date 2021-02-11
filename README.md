@@ -62,6 +62,14 @@ tbx test_file.tab
 ╚══════════╩══════════╩══════════╩══════════╩══════════╝
 ```
 
+Note that `tbx` behaves a little like the `head` command, and by default
+displays the first ten (10) rows of your file.  To get the full file use the
+`-F` (`--full`) option.
+
+```
+tbx -F test_file.tab
+```
+
 The `--csv` option supports CSV files with optional quoting and/or embedded 
 new-lines.
 
@@ -109,6 +117,11 @@ tbx --csv --transpose test_file.csv
 ║ 5   ║ HEADER_5    ║ COL5ROW1 ║ COL5ROW2 ║ COL5ROW3 ║ COL5ROW4 ║ COL5ROW5 ║ COL5ROW6 ║
 ╚═════╩═════════════╩══════════╩══════════╩══════════╩══════════╩══════════╩══════════╝
 ```
+
+The main goal of `tbx` is not to display hundreds of rows of data, but to
+zero-in on a specific handful of rows you'd like to examine carefully.
+
+See the included manual page for more details and examples.
 
 ## Building tbx
 
