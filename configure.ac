@@ -24,7 +24,7 @@ AC_PROG_INSTALL
 AC_PROG_RANLIB
 
 # Checks for libraries.
-AC_CHECK_LIB([csv], [csv_parse])
+# AC_CHECK_LIB([csv], [csv_parse])
 AC_CHECK_LIB([fort], [ft_create_table])
 
 # Checks for header files.
