@@ -16,6 +16,7 @@
 #include <util/darray.h>
 #include <csv.h>
 #include <fort.h>
+#include "config.h"
 #define INT_SIZE 16
 #define DEFAULT_ROWS 10
 #define IS_CTRL  (1 << 0)
@@ -114,7 +115,7 @@ static void chomp(char *s) {
 /* Check if a string contains numeric data */
 static int isNumeric (const char * s)
 {
-    if (s == NULL || *s == '\0' || isspace(*s))
+    if (s == NULL || *s == '\0' || isspace((unsigned int)*s))
       return 0;
     char * p;
     strtod (s, &p);
