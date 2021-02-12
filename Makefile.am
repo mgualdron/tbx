@@ -10,12 +10,12 @@ dist_man_MANS = man/tbx.1
 bin_PROGRAMS = bin/tbx
 bin_tbx_SOURCES = src/tbx.c
 bin_tbx_CPPFLAGS = -I$(top_srcdir)/src -DNDEBUG
-bin_tbx_LDADD = build/libutil.a -l:libcsv.a
+bin_tbx_LDADD = build/libutil.a
 
 check_PROGRAMS = tests/darray_tests
 tests_darray_tests_SOURCES = tests/darray_tests.c tests/minunit.h
 tests_darray_tests_CPPFLAGS = -I$(top_srcdir)/src -DNDEBUG
-tests_darray_tests_LDADD = build/libutil.a -l:libcsv.a
+tests_darray_tests_LDADD = build/libutil.a
 TESTS = $(check_PROGRAMS)
 
 EXTRA_DIST = m4/NOTES
