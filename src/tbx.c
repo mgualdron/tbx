@@ -24,6 +24,7 @@
 #define INT_SIZE 16
 #define DEFAULT_ROWS 10
 #define IS_CTRL  (1 << 0)
+#define REPLACEMENT_CHARACTER 0xfffd   // This is '?' inside a diamond.
 
 #define Sasprintf(write_to, ...) {           \
     char *tmp_string_to_extend = (write_to); \
@@ -119,6 +120,7 @@ static struct option long_options[] = {
 /* Remove trailing CR/LF */
 static void chomp(char *s) {
     while(*s && *s != '\n' && *s != '\r') s++;
+
     *s = 0;
 }
 
@@ -237,7 +239,6 @@ static void wwrap(wchar_t *input, wchar_t *output, size_t wlen)
 
 mbstate_t state;
 static char *enc = "UTF-8";
-#define REPLACEMENT_CHARACTER 0xfffd    // This is the (in)famous <?>
 
 static char *clean_and_wrap (char *in) {
 
@@ -340,7 +341,6 @@ static int table_from_matrix(DArray *matrix)
 
             for (j = 0; j < DArray_count(record); j++) {
                 char *p = (char *)(record->contents[j]);
-                //replacechar(p,'\t',' ');           // ft_write() doesn't like TABs
                 //replacechars(p, IS_CTRL, ' ');       // ft_write() doesn't like unprintables.
                 if ( isNumeric(p) ) {
                     ft_set_cell_prop(table, i, j, FT_CPROP_TEXT_ALIGN, FT_ALIGNED_RIGHT);
@@ -352,7 +352,8 @@ static int table_from_matrix(DArray *matrix)
                 //char o[strlen(p) + (nnl*rlen) + 1];  // VLA
                 //wrap(p, o, wrap_len);
 
-                ft_u8write(table, o);                 /* Put o on the heap */
+                ft_u8write(table, o);                 /* Put o on the table (heap) */
+                free(o);                              /* Done with o */
             }
 
             ft_ln(table);
@@ -929,6 +930,9 @@ int main (int argc, char *argv[])
     int j = optind;  // A copy of optind (the number of options at the command-line),
                      // which is not the same as argc, as that counts ALL
                      // arguments.  (optind <= argc).
+
+    // Set the locale:
+    setlocale(LC_CTYPE, "en_US.utf8");
 
     // Process any remaining command line arguments (input files).
     do {
