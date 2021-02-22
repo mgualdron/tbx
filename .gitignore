@@ -77,3 +77,16 @@ configure
 Makefile
 Makefile.in
 stamp-h1
+
+# Gnulib stuff
+lib/inttypes.h
+lib/limits.h
+lib/locale.h
+lib/sys/
+lib/uchar.h
+lib/unictype.h
+lib/unistr.h
+lib/unitypes.h
+lib/uniwidth.h
+lib/wchar.h
+lib/wctype.h
