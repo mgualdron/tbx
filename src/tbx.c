@@ -5,6 +5,7 @@
 //                  the command-line.
 //
 // -------------------------------------------------------------------------
+#define _GNU_SOURCE //cause stdio.h to include vasprintf
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,6 +24,12 @@
 #define INT_SIZE 16
 #define DEFAULT_ROWS 10
 #define IS_CTRL  (1 << 0)
+
+#define Sasprintf(write_to, ...) {           \
+    char *tmp_string_to_extend = (write_to); \
+    asprintf(&(write_to), __VA_ARGS__);      \
+    free(tmp_string_to_extend);              \
+}
 
 static const char *program_name = "tbx";
 static char *delim_arg = "\t";
@@ -226,6 +233,78 @@ static void wwrap(wchar_t *input, wchar_t *output, size_t wlen)
             }
         }
     }
+}
+
+mbstate_t state;
+static char *enc = "UTF-8";
+#define REPLACEMENT_CHARACTER 0xfffd    // This is the (in)famous <?>
+
+static char *clean_and_wrap (char *in) {
+
+    size_t in_sz = strlen(in);
+ 
+    char32_t out[in_sz];
+    char *p_in = in;
+    char *end  = in + in_sz + 1;  // Includes the ending NUL char
+    char32_t *p_out = out;
+    size_t rc = 0;
+    int char_count = 0;
+    char *nl = "\n";
+
+    while((rc = mbrtoc32(p_out, p_in, end - p_in, &state)))
+    {
+        check(rc != (size_t)-3, "ERROR:  there should not be any UTF-32 surrogate pairs.");
+        if ( rc == (size_t)-1 || rc == (size_t)-2 ) {
+            out[char_count] = REPLACEMENT_CHARACTER;
+            rc = 1;
+        }
+        p_in += rc;
+        p_out += 1;
+        char_count++;
+    }
+
+    size_t out_sz = p_out - out;
+    char *oput = strdup("");
+    int i = 0;
+    int cw = 0;
+    rc = 0;
+
+    for(size_t n = 0; n < out_sz; ++n) {
+
+        char u8_out[MB_CUR_MAX];
+
+        if ( out[n] == 0xa || out[n] == 0xd ) {  // Leave any \r\n in the data.
+            rc = c32rtomb(u8_out, out[n], &state); 
+            i = 0;
+        }
+        else if ( c32isprint(out[n]) ) {
+            rc = c32rtomb(u8_out, out[n], &state); 
+        }
+        else {
+            rc = c32rtomb(u8_out, REPLACEMENT_CHARACTER, &state); 
+        }
+
+        if ( rc == (size_t)-1 ) {
+            rc = c32rtomb(u8_out, REPLACEMENT_CHARACTER, &state); 
+        }
+
+        u8_out[rc] = '\0';
+        cw = u8_width((unsigned char *)u8_out, strlen(u8_out), enc);
+        i += cw;
+
+        if ( i <= wrap_len ) {            // Check if we need to wrap.
+            Sasprintf(oput, "%s%s", oput, u8_out);
+        }
+        else {
+            Sasprintf(oput, "%s%s%s", oput, nl, u8_out);
+            i = cw;
+        }
+    }
+
+    return(oput);
+
+error:
+    return(NULL);
 }
 
 
