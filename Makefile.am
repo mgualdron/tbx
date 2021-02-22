@@ -1,5 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4 --install
 AM_CFLAGS = -g -O2 -std=gnu99 -Wall -Wextra
+SUBDIRS = lib
 
 noinst_LIBRARIES = build/libutil.a
 build_libutil_a_SOURCES = src/util/darray.c src/util/darray.h src/util/dbg.h
