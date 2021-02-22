@@ -1,3 +1,18 @@
+2021-02-22: Updated for the latest UTF-8 compatibility changes.
+2021-02-22: Removed lots of wchar cruft, along with -N option.
+2021-02-22: Minor changes to get clean_and_wrap() function working properly.
+2021-02-22: Added Gnulib files created by configure.
+2021-02-22: Adjustments to use new clean_and_wrap() function.
+2021-02-22: Added new clean_and_wrap() function based on Gnulib modules.
+2021-02-22: Added Gnulib modules: uniwidth/u8-width mbrtoc32 c32rtomb c32isprint
+2021-02-22: Added lib subdirectory to suppoer Gnulib modules.
+2021-02-22: Minor changes to include Gnulib modules.
+2021-02-22: Minor changes to use Gnulib modules.
+2021-02-12: Added explicit linking against csv static library libcsv.a. for binary portability.
+2021-02-12: Removing explicit -l:libcsv.a
+2021-02-11: Added linking to static libcsv.a.
+2021-02-11: Added backup files to be ignored.
+2021-02-11: Added latest changes.
 2021-02-11: Added more Autotools-related files.
 2021-02-11: Documentation changes for Autotools.
 2021-02-11: Minor change to support Autotools.
