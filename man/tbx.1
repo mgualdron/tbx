@@ -9,7 +9,7 @@ tbx \- Tabulate a delimited file at the command\-line
 .SH DESCRIPTION
 tbx displays delimited data in tabular form. It supports files with fields delimited by one or more characters, or files following CSV rules delimited by a single character.  It works well with UTF-8 encoded files.  YMMV with other encodings.  \fBiconv (1)\fR is your friend.
 .SH OPTIONS
-tbx takes several options.
+tbx defaults to outputting the first 10 lines of your file, however, this behavior can be changed using the below options.
 .TP
 .BR \-d ", " \-\-delim=<char>
 Sets the delimiting character to use when parsing the file.  The default value is a TAB character.  However when using the \fB--csv\fR option the default value is a comma.
@@ -103,7 +103,7 @@ tbx -x --csv fake_address_data.csv
 ╚═════╩═════════════╝
 .EE
 .TP
-If we also want to see two records starting at line 25:
+If we also want to see two records starting at line 25 (record 24 -- the header is not a record):
 .TP
 .EX
 tbx --csv -x -l25 -r2 -H fake_address_data.csv
