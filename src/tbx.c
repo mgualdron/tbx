@@ -341,14 +341,16 @@ static int table_from_matrix(DArray *matrix)
             for (j = 0; j < DArray_count(record); j++) {
                 char *p = (char *)(record->contents[j]);
                 //replacechar(p,'\t',' ');           // ft_write() doesn't like TABs
-                replacechars(p, IS_CTRL, ' ');       // ft_write() doesn't like unprintables.
+                //replacechars(p, IS_CTRL, ' ');       // ft_write() doesn't like unprintables.
                 if ( isNumeric(p) ) {
                     ft_set_cell_prop(table, i, j, FT_CPROP_TEXT_ALIGN, FT_ALIGNED_RIGHT);
                 }
 
-                nnl = ( strlen(p) / wrap_len );      // Number of newlines to add
-                char o[strlen(p) + (nnl*rlen) + 1];  // VLA
-                wrap(p, o, wrap_len);
+                char *o = clean_and_wrap(p);
+                check(o != NULL, "Error while cleaning cell (%d,%d)", i, j);
+                //nnl = ( strlen(p) / wrap_len );      // Number of newlines to add
+                //char o[strlen(p) + (nnl*rlen) + 1];  // VLA
+                //wrap(p, o, wrap_len);
 
                 ft_u8write(table, o);                 /* Put o on the heap */
             }
@@ -368,6 +370,9 @@ static int table_from_matrix(DArray *matrix)
         ft_destroy_table(table);
         return 1;
     }
+
+error:
+    return 1;
 
 }
 
@@ -964,23 +969,12 @@ int main (int argc, char *argv[])
             DArray *xpose = transpose(matrix);
             check( xpose != NULL, "Error transposing file: %s", filename);
 
-            if ( wchar_mode ) {
-                retval = wtable_from_matrix(xpose);
-            }
-            else {
-                retval = table_from_matrix(xpose);
-            }
+            retval = table_from_matrix(xpose);
 
             master_destroy(xpose);
         }
         else {
-
-            if ( wchar_mode ) {
-                retval = wtable_from_matrix(matrix);
-            }
-            else {
-                retval = table_from_matrix(matrix);
-            }
+            retval = table_from_matrix(matrix);
         }
 
         master_destroy(matrix);
@@ -997,7 +991,7 @@ error:
 }
 /*
  *
- * Copyright (C) 2020 Miguel Gualdron
+ * Copyright (C) 2021 Miguel Gualdron
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
