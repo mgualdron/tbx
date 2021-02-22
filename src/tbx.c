@@ -12,7 +12,6 @@
 #include <locale.h>
 #include <getopt.h>
 #include <ctype.h>
-#include <wchar.h>
 #include <util/dbg.h>
 #include <util/darray.h>
 #include <csv.h>
@@ -23,7 +22,6 @@
 #include "config.h"
 #define INT_SIZE 16
 #define DEFAULT_ROWS 10
-#define IS_CTRL  (1 << 0)
 #define REPLACEMENT_CHARACTER 0xfffd   // This is '?' inside a diamond.
 
 #define Sasprintf(write_to, ...) {           \
@@ -47,14 +45,8 @@ static int full_mode  = -1;
 static int line_arg   = 1;
 static int row_arg    = 1;
 static int header_arg = 0;
-static int wchar_mode  = 1;
-static char *rdelim = "\n";
-static wchar_t *wrdelim = L"\n";
-static size_t rlen = 0;
 static int wrap_len   = 50;
 static int text_style = 0;
-static unsigned int char_tbl[256] = {0};
-//static char *lc_ctype = NULL;
 
 // The callbacks for CSV processing:
 static void cb1_x (void *s, size_t len, void *data);
@@ -90,7 +82,6 @@ More than one FILE can be specified.\n\
   -l, --from-line=NUM  process starting from this line number (default is 1)\n\
   -r, --rows=NUM       process this many rows starting at -l (default is 10 or 1 if -x)\n\
   -w, --wrap=NUM       wrap each column to this length (default is 50)\n\
-  -N, --no-wchar       process the input as non-wide characters (not as reliable)\n\
   -F, --full           process the whole file (ignoring -r)\n\
   -T, --text           render table border in plain text\n\
   -h, --help           this help\n\
@@ -109,7 +100,6 @@ static struct option long_options[] = {
     {"from-line" , required_argument, 0, 'l'},
     {"rows"      , required_argument, 0, 'r'},
     {"wrap"      , required_argument, 0, 'w'},
-    {"no-wchar"  , no_argument,       0, 'N'},
     {"header"    , no_argument,       0, 'H'},
     {"full"      , no_argument,       0, 'F'},
     {"text"      , no_argument,       0, 'T'},
@@ -132,109 +122,6 @@ static int isNumeric (const char * s)
     char * p;
     strtod (s, &p);
     return *p == '\0';
-}
-
-/*
-int replacechar(char *input, char orig, char rep) {
-    char *ix = input;
-    int n = 0;
-    while((ix = strchr(ix, orig)) != NULL) {
-        *ix++ = rep;
-        n++;
-    }
-    return n;
-}
-*/
- 
-/* List of unprintable characters to replace. */
-static void init_table()
-{
-	int i;
- 
-	for (i = 0; i < 32; i++)
-        char_tbl[i] |= IS_CTRL;
-
-	char_tbl[127] |= IS_CTRL;
-}
- 
-static void replacechars(char * str, int what, const char repl)
-{
-	unsigned char *ptr, *s = (void*)str;
-	ptr = s;
-	while (*s != '\0') {
-
-        // If we match the what, we get non-zero and exclude the char.
-		if ((char_tbl[(int)*s] & what) == 0) {  // If we don't match, we get 0 and keep the char.
-			*(ptr++) = *s;
-        }
-        else {
-			*(ptr++) = repl;   // Otherwise, replace it.
-        }
-		s++;
-	}
-	*ptr = '\0';
-}
-
-/* Wrap a string to a specified width */
-static void wrap(char *input, char *output, size_t wlen)
-{
-    size_t p = 0;
-    size_t n = 0;
-    size_t nnl = 0;   // number of newlines to add to input
-    size_t olen = strlen(input);  // output length
-
-    if ( wlen <= 0 || olen <= wlen ) {
-        strncpy(output, input, olen + 1);
-    }
-    else {
-        nnl = ( strlen(input) / wlen );   // Number of newlines to add
-        olen += (nnl*rlen);
-
-        p=0;
-        while(1)
-        {
-            strncpy(output+p, input+(n*wlen), wlen);
-            p += wlen;
-            strncpy(output+p, rdelim, rlen);
-            p += rlen;
-            n++;
-
-            if ( p >= olen ) {
-                break;
-            }
-        }
-    }
-}
-
-/* Wrap a string to a specified width */
-static void wwrap(wchar_t *input, wchar_t *output, size_t wlen)
-{
-    size_t p = 0;
-    size_t n = 0;
-    size_t nnl = 0;   // number of newlines to add to input
-    size_t olen = wcslen(input);  // output length
-
-    if ( wlen <= 0 || olen <= wlen ) {
-        wcsncpy(output, input, olen + 1);
-    }
-    else {
-        nnl = ( wcslen(input) / wlen );   // Number of newlines to add
-        olen += (nnl*rlen);
-
-        p=0;
-        while(1)
-        {
-            wcsncpy(output+p, input+(n*wlen), wlen);
-            p += wlen;
-            wcsncpy(output+p, wrdelim, rlen);
-            p += rlen;
-            n++;
-
-            if ( p >= olen ) {
-                break;
-            }
-        }
-    }
 }
 
 mbstate_t state;
@@ -313,7 +200,7 @@ error:
 static int table_from_matrix(DArray *matrix)
 {
 
-    int i, j, nnl;
+    int i, j;
     DArray *record;
 
     // setlocale(LC_CTYPE, "");  // Set the original value
@@ -340,17 +227,15 @@ static int table_from_matrix(DArray *matrix)
         if ( DArray_end(record) > 0 ) {
 
             for (j = 0; j < DArray_count(record); j++) {
+
                 char *p = (char *)(record->contents[j]);
-                //replacechars(p, IS_CTRL, ' ');       // ft_write() doesn't like unprintables.
+
                 if ( isNumeric(p) ) {
                     ft_set_cell_prop(table, i, j, FT_CPROP_TEXT_ALIGN, FT_ALIGNED_RIGHT);
                 }
 
                 char *o = clean_and_wrap(p);
                 check(o != NULL, "Error while cleaning cell (%d,%d)", i, j);
-                //nnl = ( strlen(p) / wrap_len );      // Number of newlines to add
-                //char o[strlen(p) + (nnl*rlen) + 1];  // VLA
-                //wrap(p, o, wrap_len);
 
                 ft_u8write(table, o);                 /* Put o on the table (heap) */
                 free(o);                              /* Done with o */
@@ -376,77 +261,6 @@ error:
     return 1;
 
 }
-
-
-/* Print an array of arrays in wchar table form */
-static int wtable_from_matrix(DArray *matrix)
-{
-
-    int i, j, nnl;
-    DArray *record;
-
-    setlocale(LC_CTYPE, "");  // Avoid printing '(null)'
-    // printf("Locale is set to %s\n", lc_ctype);
-
-    /* The table to be displayed */
-    ft_table_t *table = ft_create_table();
-
-    /* Set "header" type for the first row */
-    ft_set_cell_prop(table, 0, FT_ANY_COLUMN, FT_CPROP_ROW_TYPE, FT_ROW_HEADER);
-
-    /* Change border style */
-    if ( text_style ) {
-        ft_set_border_style(table, FT_BASIC_STYLE);
-    }
-    else {
-        ft_set_border_style(table, FT_NICE_STYLE);
-    }
-
-    for (i = 0; i < DArray_count(matrix); i++) {
-
-        record = (DArray *)(matrix->contents[i]);
-
-        if ( DArray_end(record) > 0 ) {
-
-            for (j = 0; j < DArray_count(record); j++) {
-                char *p = (char *)(record->contents[j]);
-                //replacechar(p,'\t',' ');           // ft_write() doesn't like TABs
-                replacechars(p, IS_CTRL, ' ');       // ft_write() doesn't like unprintables.
-                if ( isNumeric(p) ) {
-                    ft_set_cell_prop(table, i, j, FT_CPROP_TEXT_ALIGN, FT_ALIGNED_RIGHT);
-                }
-                wchar_t w[strlen(p)+1];              /* VLA */
-                swprintf(w, strlen(p)+1, L"%s", p);  /* Convert char to wchar_t */
-
-                nnl = ( wcslen(w) / wrap_len );      // Number of newlines to add
-                wchar_t o[wcslen(w) + (nnl*rlen) + 1];   // VLA
-                wwrap(w, o, wrap_len);
-
-                ft_wwrite(table, o);                 /* Put o on the heap */
-            }
-
-            ft_ln(table);
-        }
-
-    }
-
-    // printf("%ls\n", ft_to_wstring(table));
-    const wchar_t *table_wstr = ft_to_wstring(table);
-    if (table_wstr) {
-        fwprintf(stdout, L"%ls", table_wstr);
-        ft_destroy_table(table);
-        return 0;
-    } else {
-        // fwprintf(stderr, L"Table conversion failed !!!\n ");
-        ft_destroy_table(table);
-        return 1;
-    }
-
-}
-
-
-
-
 
 /* Destroy 2-D arrays */
 static void master_destroy ( DArray *matrix )
@@ -541,33 +355,6 @@ static DArray *transpose( DArray *matrix )
     }
     return xpose;
 }
-
-/* Simply print the 2-D array */
-/*
-static void tb_print( DArray *matrix )
-{
-    int i, j, col;
-    DArray *record;
-    setlocale(LC_CTYPE, "");  // Avoid printing blank
-
-    for (i = 0; i < DArray_count(matrix); i++) {
-
-        record = (DArray *)(matrix->contents[i]);
-        debug("row %d: ", i + 1);
-
-        col = 0;
-        for (j = 0; j < DArray_count(record); j++) {
-            col++;
-            if ( j > 0 ) {
-                printf("\t");
-            }
-            //printf("col %d: %s", col, (char *)(record->contents[j]));
-            printf("%s", (char *)(record->contents[j]));
-        }
-        printf("\n");
-    }
-}
-*/
 
 /* Load a regular delimited file */
 static int file_load(char *filename, DArray *matrix)
@@ -784,12 +571,8 @@ int main (int argc, char *argv[])
     int row_arg_flag   = 0;
     int retval = 0;
 
-    /*
-    lc_ctype = setlocale(LC_CTYPE, NULL);
-    printf("Locale is detected as %s\n", lc_ctype);
-    */
-    rlen = wcslen(wrdelim);    // The length of the row delimiter (normally 1)
-	init_table();
+    // Set the locale:
+    setlocale(LC_CTYPE, "en_US.utf8");
 
     /* Loop through the incoming command-line arguments. */
     while (1) {
@@ -797,7 +580,7 @@ int main (int argc, char *argv[])
         // getopt_long stores the option index here.
         int option_index = 0;
 
-        c = getopt_long (argc, argv, "FHhNxCTd:l:Q:r:w:", long_options, &option_index);
+        c = getopt_long (argc, argv, "FHhxCTd:l:Q:r:w:", long_options, &option_index);
 
         // Detect the end of the options.
         if (c == -1) break;
@@ -827,11 +610,6 @@ int main (int argc, char *argv[])
             case 'x':
                 debug("option -x");
                 xpose_arg = 1;
-                break;
-
-            case 'N':
-                debug("option -W");
-                wchar_mode = 0;
                 break;
 
             case 'w':
@@ -930,9 +708,6 @@ int main (int argc, char *argv[])
     int j = optind;  // A copy of optind (the number of options at the command-line),
                      // which is not the same as argc, as that counts ALL
                      // arguments.  (optind <= argc).
-
-    // Set the locale:
-    setlocale(LC_CTYPE, "en_US.utf8");
 
     // Process any remaining command line arguments (input files).
     do {
