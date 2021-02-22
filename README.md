@@ -21,7 +21,6 @@ More than one FILE can be specified.
   -l, --from-line=NUM  process starting from this line number (default is 1)
   -r, --rows=NUM       process this many rows starting at -l (default is 10 or 1 if -x)
   -w, --wrap=NUM       wrap each column to this length (default is 50)
-  -N, --no-wchar       process the input as non-wide characters (not as reliable)
   -F, --full           process the whole file (ignoring -r)
   -T, --text           render table border in plain text
   -h, --help           this help
@@ -132,7 +131,7 @@ Install the following required libraries.
 
 These can be installed in the standard system locations or in your `$HOME` directory.
 
-Note that the git repository does not include a `configure` script like a 
+Note that this git repository does not include a `configure` script like a 
 distribution tarball normally does.  If you don't want to bother with 
 installing `autoconf` and `automake`, then download a distribution package 
 and run `configure`:
@@ -141,7 +140,7 @@ and run `configure`:
 ./configure
 ```
 
-Note that if some of the required libraries are in your `$HOME` directory, 
+If some of the required libraries are in your `$HOME` directory, 
 and if you also want the `tbx` binary installed in your `$HOME/bin`, you should 
 run something like:
 
@@ -149,7 +148,7 @@ run something like:
 ./configure CPPFLAGS="-I$HOME/include" LDFLAGS="-L$HOME/lib" --prefix=$HOME
 ```
 
-If you're building from a copy of the git repository, you'll need to have 
+If you're building from a copy of this git repository, you'll need to have 
 `autoconf` and `automake` installed on your system, and run the following 
 command to generate a `configure` script:
 
