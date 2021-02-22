@@ -4,7 +4,7 @@
 AC_PREREQ([2.69])
 AC_INIT(
     [tbx],
-    [0.0.1],
+    [0.0.2],
     [https://github.com/mgualdron/tbx/issues],
     [tbx],
     [https://github.com/mgualdron/tbx])
@@ -16,10 +16,12 @@ AC_CONFIG_MACRO_DIR([m4])
 
 # AutoMake
 AM_INIT_AUTOMAKE([1.11 subdir-objects])
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile lib/Makefile])
 
 # Checks for programs.
 AC_PROG_CC
+gl_EARLY
+gl_INIT
 AC_PROG_INSTALL
 AC_PROG_RANLIB
 
@@ -28,7 +30,7 @@ AC_CHECK_LIB([fort], [ft_create_table])
 AC_CHECK_LIB([csv], [csv_parse], [LIBS="-l:libcsv.a $LIBS"] [AC_DEFINE([HAVE_LIBCSV], [1], [Define if csv_parse is found.])])
 
 # Checks for header files.
-AC_CHECK_HEADERS([locale.h stdlib.h string.h wchar.h])
+# AC_CHECK_HEADERS([locale.h stdlib.h string.h wchar.h])
 AC_CHECK_HEADER([fort.h], , [AC_MSG_ERROR(
 [Could not find the fort header file. If fort.h is in a non-standard \
 location, you can add it by setting your CPPFLAGS variable when running \
