@@ -37,9 +37,6 @@ If neither \fB-l\fR or \fB-r\fR are specified, processing starts with the first 
 .BR \-w ", " \-\-wrap=<num>
 Wrap each column (by adding newlines) to this width.  This can be adjusted to prevent the table from exceeding the width of your terminal.  The default value is 50.
 .TP
-.BR \-N ", " \-\-no\-wchar
-The \fBlibfort\fR library that \fBtbx\fR relies on is currently more reliable when processing Unicode as Wide Characters (this is the default).  However, if you would like to try the \fBUTF-8\fR table functions use this flag.
-.TP
 .BR \-F ", " \-\-full
 Process the full file (ignoring \fB-r\fR).  Note that the data to be tabulated is loaded into memory, so, if you're trying to display a very large file, you may run out of memory.
 .IP
@@ -131,13 +128,11 @@ tbx --csv -x -l25 -r2 -H fake_address_data.csv
 Note that we're using the \fB-H\fR option to display the header along with our data.
 .SH SEE ALSO
 \fBcsv(3)\fR
-.SH BUGS
-Invalid UTF-8 byte sequences can result in a blank table, or a string containing the text "(NULL)".
 .SH AUTHOR
 Miguel Gualdron (dev at gualdron.com)
 .SH LICENSE
 .EX
-Copyright (C) 2020 Miguel Gualdron
+Copyright (C) 2021 Miguel Gualdron
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
