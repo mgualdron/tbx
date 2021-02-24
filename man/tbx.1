@@ -81,7 +81,7 @@ tbx test_file.tab
 ╚══════════╩══════════╩══════════╩══════════╩══════════╝
 .EE
 .TP
-If we have a large CSV file, which might be too wide to fit on the terminal, we can still see the fie layout by using the transpose (\fB-x\fR) option as follows:
+If we have a large CSV file, which might be too wide to fit on the terminal, we can still see the file layout by using the transpose (\fB-x\fR) option as follows:
 .TP
 .EX
 tbx -x --csv fake_address_data.csv
@@ -103,7 +103,7 @@ tbx -x --csv fake_address_data.csv
 ╚═════╩═════════════╝
 .EE
 .TP
-If we also want to see two records starting at line 25 (record 24 -- the header is not a record):
+If we also want to see two records starting at line 25 (or record 24 -- the header is not a record):
 .TP
 .EX
 tbx --csv -x -l25 -r2 -H fake_address_data.csv
