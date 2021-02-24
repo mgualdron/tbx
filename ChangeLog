@@ -1,3 +1,7 @@
+2021-02-24: Minor adjustment to allow NUL byte in mb character output.
+2021-02-22: Minor documentation updates for clarity.
+2021-02-22: Updates to include latest Gnulib-related changes.
+2021-02-22: Added mention of Gnulib changes.
 2021-02-22: Updated for the latest UTF-8 compatibility changes.
 2021-02-22: Removed lots of wchar cruft, along with -N option.
 2021-02-22: Minor changes to get clean_and_wrap() function working properly.
