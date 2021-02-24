@@ -126,6 +126,7 @@ static int isNumeric (const char * s)
 
 mbstate_t state;
 static char *enc = "UTF-8";
+static char *nl = "\n";
 
 static char *clean_and_wrap (char *in) {
 
@@ -137,7 +138,6 @@ static char *clean_and_wrap (char *in) {
     char32_t *p_out = out;
     size_t rc = 0;
     int char_count = 0;
-    char *nl = "\n";
 
     while((rc = mbrtoc32(p_out, p_in, end - p_in, &state)))
     {
@@ -159,7 +159,7 @@ static char *clean_and_wrap (char *in) {
 
     for(size_t n = 0; n < out_sz; ++n) {
 
-        char u8_out[MB_CUR_MAX];
+        char u8_out[MB_CUR_MAX + 1];  // Add 1 to include ending NUL.
 
         if ( out[n] == 0xa || out[n] == 0xd ) {  // Leave any \r\n in the data.
             rc = c32rtomb(u8_out, out[n], &state); 
@@ -176,7 +176,7 @@ static char *clean_and_wrap (char *in) {
             rc = c32rtomb(u8_out, REPLACEMENT_CHARACTER, &state); 
         }
 
-        u8_out[rc] = '\0';
+        u8_out[rc] = '\0';    // c32rtomb() doesn't add the ending NUL.
         cw = u8_width((unsigned char *)u8_out, strlen(u8_out), enc);
         i += cw;
 
