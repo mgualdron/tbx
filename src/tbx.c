@@ -23,6 +23,7 @@
 #define INT_SIZE 16
 #define DEFAULT_ROWS 10
 #define REPLACEMENT_CHARACTER 0xfffd   // This is '?' inside a diamond.
+#define BOM_CHARACTER 0xfeff
 
 #define Sasprintf(write_to, ...) {           \
     char *tmp_string_to_extend = (write_to); \
@@ -166,7 +167,13 @@ static char *clean_and_wrap (char *in) {
             i = 0;
         }
         else if ( c32isprint(out[n]) ) {
-            rc = c32rtomb(u8_out, out[n], &state); 
+            if ( out[n] == BOM_CHARACTER ) {
+                // Ignore a BOM:
+                rc = (size_t)0;
+            }
+            else {
+                rc = c32rtomb(u8_out, out[n], &state); 
+            }
         }
         else {
             rc = c32rtomb(u8_out, REPLACEMENT_CHARACTER, &state); 
@@ -399,6 +406,11 @@ static int file_load(char *filename, DArray *matrix)
             debug("Loaded record: %d\n", DArray_count(matrix));
         }
 
+        // Check if we're past the data we wanted:
+        if ( !full_mode && line_num > line_arg + row_arg - 1 ) {
+            break;
+        }
+
     }
 
     debug("Read a total of %d records\n", DArray_count(matrix));
@@ -437,7 +449,10 @@ static int file_load_multi(char *filename, DArray *matrix)
 
         line_num++;
 
-        if ( full_mode || ( header_arg && line_num == 1 ) || ( (line_num >= line_arg) && (line_num <= line_arg + row_arg - 1) ) ) {
+        if ( full_mode ||
+                ( header_arg && line_num == 1 ) ||
+                ( (line_num >= line_arg) &&
+                  (line_num <= line_arg + row_arg - 1) ) ) {
 
             orig_line = line;
             chomp(line);
@@ -471,6 +486,11 @@ static int file_load_multi(char *filename, DArray *matrix)
                 free(orig_line);
             line = NULL;
         }
+
+        // Check if we're past the data we wanted:
+        if ( !full_mode && line_num > line_arg + row_arg - 1 ) {
+            break;
+        }
     }
 
     debug("Read a total of %d records\n", DArray_count(matrix));
@@ -485,7 +505,10 @@ error: return -1;
 // Callback 1 for CSV support, called whenever a field is processed:
 static void cb1_x (void *s, size_t len, void *data)
 {
-    if ( full_mode || ( header_arg && line_num == 1 ) || ( (line_num >= line_arg) && (line_num <= line_arg + row_arg - 1) ) ) {
+    if ( full_mode ||
+            ( header_arg && line_num == 1 ) ||
+            ( (line_num >= line_arg)
+              && (line_num <= line_arg + row_arg - 1) ) ) {
 
         DArray *matrix = (DArray *)data;
         int last = DArray_end(matrix) - 1;
@@ -504,7 +527,10 @@ static void cb1_x (void *s, size_t len, void *data)
 static void cb2_x (int c, void *data)
 {
 
-    if ( full_mode || ( header_arg && line_num == 1 ) || ( (line_num >= line_arg) && (line_num <= line_arg + row_arg - 1) ) ) {
+    if ( full_mode ||
+            ( header_arg && line_num == 1 ) ||
+            ( (line_num >= line_arg) &&
+              (line_num <= line_arg + row_arg - 1) ) ) {
         DArray_push((DArray *)data, current_record);
         just_pushed_record = 1;
         current_record = NULL;
@@ -542,7 +568,8 @@ static int file_load_csv(char *filename, DArray *matrix)
         check(csv_parse(&p, buf, bytes_read, cb1_x, cb2_x, matrix) == bytes_read
                 , "Error while parsing file: %s", csv_strerror(csv_error(&p)));
 
-        if ( full_mode == 0 && line_num > line_arg + row_arg - 1 ) {
+        // Check if we're past the data we wanted:
+        if ( !full_mode && line_num > line_arg + row_arg - 1 ) {
             break;
         }
     }
