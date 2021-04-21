@@ -4,7 +4,7 @@
 AC_PREREQ([2.69])
 AC_INIT(
     [tbx],
-    [0.0.2],
+    [0.0.3],
     [https://github.com/mgualdron/tbx/issues],
     [tbx],
     [https://github.com/mgualdron/tbx])
