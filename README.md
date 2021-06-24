@@ -21,6 +21,7 @@ More than one FILE can be specified.
   -l, --from-line=NUM  process starting from this line number (default is 1)
   -r, --rows=NUM       process this many rows starting at -l (default is 10 or 1 if -x)
   -w, --wrap=NUM       wrap each column to this length (default is 50)
+  -b, --bot-line       add a separating line above the last row of output (ignored if -x)
   -F, --full           process the whole file (ignoring -r)
   -T, --text           render table border in plain text
   -h, --help           this help

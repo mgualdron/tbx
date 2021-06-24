@@ -37,6 +37,9 @@ If neither \fB-l\fR or \fB-r\fR are specified, processing starts with the first 
 .BR \-w ", " \-\-wrap=<num>
 Wrap each column (by adding newlines) to this width.  This can be adjusted to prevent the table from exceeding the width of your terminal.  The default value is 50.
 .TP
+.BR \-b ", " \-\-bot\-line
+Add a separating horizontal line above the last line of output.  This may be useful for tables diplaying totals (ignored if \fB-x\fR).
+.TP
 .BR \-F ", " \-\-full
 Process the full file (ignoring \fB-r\fR).  Note that the data to be tabulated is loaded into memory, so, if you're trying to display a very large file, you may run out of memory.
 .IP

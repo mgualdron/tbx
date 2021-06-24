@@ -83,6 +83,7 @@ More than one FILE can be specified.\n\
   -l, --from-line=NUM  process starting from this line number (default is 1)\n\
   -r, --rows=NUM       process this many rows starting at -l (default is 10 or 1 if -x)\n\
   -w, --wrap=NUM       wrap each column to this length (default is 50)\n\
+  -b, --bot-line       add a separating line above the last row of output (ignored if -x)\n\
   -F, --full           process the whole file (ignoring -r)\n\
   -T, --text           render table border in plain text\n\
   -h, --help           this help\n\
@@ -102,6 +103,7 @@ static struct option long_options[] = {
     {"rows"      , required_argument, 0, 'r'},
     {"wrap"      , required_argument, 0, 'w'},
     {"header"    , no_argument,       0, 'H'},
+    {"bot-line"  , no_argument,       0, 'b'},
     {"full"      , no_argument,       0, 'F'},
     {"text"      , no_argument,       0, 'T'},
     {"help"      , no_argument,       0, 'h'},
@@ -204,7 +206,7 @@ error:
 
 
 /* Print an array of arrays in char table form */
-static int table_from_matrix(DArray *matrix)
+static int table_from_matrix(DArray *matrix, int bot_line)
 {
 
     int i, j;
@@ -250,6 +252,8 @@ static int table_from_matrix(DArray *matrix)
 
             ft_ln(table);
         }
+
+        if ( bot_line && (i == DArray_count(matrix) - 2) ) { ft_add_separator(table); }
 
     }
 
@@ -593,6 +597,7 @@ int main (int argc, char *argv[])
 {
     int c;
     int csv_mode = 0;
+    int bot_line = 0;
     int delim_arg_flag = 0;
     int xpose_arg      = 0;
     int row_arg_flag   = 0;
@@ -607,7 +612,7 @@ int main (int argc, char *argv[])
         // getopt_long stores the option index here.
         int option_index = 0;
 
-        c = getopt_long (argc, argv, "FHhxCTd:l:Q:r:w:", long_options, &option_index);
+        c = getopt_long (argc, argv, "bFHhxCTd:l:Q:r:w:", long_options, &option_index);
 
         // Detect the end of the options.
         if (c == -1) break;
@@ -642,6 +647,11 @@ int main (int argc, char *argv[])
             case 'w':
                 debug("option -w with value `%s'", optarg);
                 wrap_len = atoi(optarg);
+                break;
+
+            case 'b':
+                debug("option -b");
+                bot_line = 1;
                 break;
 
             case 'F':
@@ -775,12 +785,12 @@ int main (int argc, char *argv[])
             DArray *xpose = transpose(matrix);
             check( xpose != NULL, "Error transposing file: %s", filename);
 
-            retval = table_from_matrix(xpose);
+            retval = table_from_matrix(xpose, 0);
 
             master_destroy(xpose);
         }
         else {
-            retval = table_from_matrix(matrix);
+            retval = table_from_matrix(matrix, bot_line);
         }
 
         master_destroy(matrix);
