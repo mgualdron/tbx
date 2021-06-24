@@ -536,6 +536,7 @@ static void cb1_x (void *s, size_t len, void *data)
             just_pushed_record = 0;
         }
 
+        if ( strlen((char *)s) < len ) { replace_nulls((char *)s, (ssize_t)len); }
         char *field = strndup(s, len);
         DArray_push(current_record, field);
     }
