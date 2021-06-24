@@ -24,6 +24,7 @@
 #define DEFAULT_ROWS 10
 #define REPLACEMENT_CHARACTER 0xfffd   // This is '?' inside a diamond.
 #define BOM_CHARACTER 0xfeff
+#define NUL_REPLACEMENT_CHARACTER 63   // This is a '?'
 
 #define Sasprintf(write_to, ...) {           \
     char *tmp_string_to_extend = (write_to); \
@@ -130,8 +131,7 @@ static int isNumeric (const char * s)
 static void replace_nulls(char *line, ssize_t bytes_read)
 {
     for (ssize_t i = 0; i < bytes_read; i++) {
-        // Replace a NUL with a Unit Separator:
-        if ( line[i] == 0 ) { line[i] = 31; }
+        if ( line[i] == 0 ) { line[i] = NUL_REPLACEMENT_CHARACTER; }
     }
 }
 
