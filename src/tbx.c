@@ -127,6 +127,14 @@ static int isNumeric (const char * s)
     return *p == '\0';
 }
 
+static void replace_nulls(char *line, ssize_t bytes_read)
+{
+    for (ssize_t i = 0; i < bytes_read; i++) {
+        // Replace a NUL with a Unit Separator:
+        if ( line[i] == 0 ) { line[i] = 31; }
+    }
+}
+
 mbstate_t state;
 static char *enc = "UTF-8";
 static char *nl = "\n";
@@ -388,6 +396,9 @@ static int file_load(char *filename, DArray *matrix)
 
     while ((bytes_read = getline(&line, &len, fp)) != -1) {
 
+        // A smaller strlen tells us we have NULs in the line string:
+        if ( strlen(line) < (size_t)bytes_read ) { replace_nulls(line, bytes_read); }
+
         line_num++;
         chomp(line);
 
@@ -450,6 +461,9 @@ static int file_load_multi(char *filename, DArray *matrix)
     check(fp != NULL, "Error opening file: %s.", filename);
 
     while ((bytes_read = getline(&line, &len, fp)) != -1) {
+
+        // A smaller strlen tells us we have NULs in the line string:
+        if ( strlen(line) < (size_t)bytes_read ) { replace_nulls(line, bytes_read); }
 
         line_num++;
 
