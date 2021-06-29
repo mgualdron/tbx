@@ -102,21 +102,46 @@ tbx --csv test_file.csv
 ╚══════════╩══════════╩══════════╩══════════╩══════════╝
 ```
 
-You can also transpose the data:
+One of the most useful features is to be able to transpose the data, in
+combination with being able to select specific rows with `-l` and `-r`.
+
+For example, we have a wide file delimmited by pipes:
+
 
 ```
-tbx --csv --transpose test_file.csv
+head -3 fakedata.txt
 
-╔═════╦═════════════╦══════════╦══════════╦══════════╦══════════╦══════════╦══════════╗
-║ COL ║ FIELD NAMES ║ RECORD 1 ║ RECORD 2 ║ RECORD 3 ║ RECORD 4 ║ RECORD 5 ║ RECORD 6 ║
-╠═════╬═════════════╬══════════╬══════════╬══════════╬══════════╬══════════╬══════════╣
-║ 1   ║ HEADER_1    ║ COL1ROW1 ║ COL1ROW2 ║ COL1ROW3 ║ COL1ROW4 ║ COL1ROW5 ║ COL1ROW6 ║
-║ 2   ║ HEADER_2    ║ COL2ROW1 ║ COL2ROW2 ║ COL2ROW3 ║ COL2ROW4 ║ COL2ROW5 ║ COL2ROW6 ║
-║ 3   ║ HEADER_3    ║ COL3ROW1 ║ COL3ROW2 ║ COL3ROW3 ║ COL3ROW4 ║ COL3ROW5 ║ COL3ROW6 ║
-║ 4   ║ HEADER_4    ║ COL4ROW1 ║ COL4ROW2 ║ COL4ROW3 ║ COL4ROW4 ║ COL4ROW5 ║ COL4ROW6 ║
-║ 5   ║ HEADER_5    ║ COL5ROW1 ║ COL5ROW2 ║ COL5ROW3 ║ COL5ROW4 ║ COL5ROW5 ║ COL5ROW6 ║
-╚═════╩═════════════╩══════════╩══════════╩══════════╩══════════╩══════════╩══════════╝
+NAME|PHONE|EMAIL|update_dt|ORG_ID|RUT|PID|OID|Address|city|zip|region|country|lat_long|PAN
+Leo|0800 1111|Sed.eu@dolorsitamet.edu|Feb 15, 2022|117985069-00006|10699987-2|16240903 6494|708521 9637|P.O. Box 710, 9971 Proin Rd.|Sukabumi|66967-564|JB|Dominican Republic|4.65026, 164.7462|542065 0974506092
+Edward|055 6837 8442|turpis.Nulla@tellusSuspendisse.edu|Jul 23, 2021|569153687-00003|19619579-3|16580925 3585|633719 7286|Ap #623-5708 Cursus Ave|Ajax|95186|ON|Switzerland|22.52987, 10.37935|5232 2479 1716 6403
 ```
+
+If we want to look at two records starting at line 57 (including the header):
+
+
+```
+tbx -x -H -l57 -r2 -d'|' fakedata.txt
+
+╔═════╦═════════════╦═══════════════════════════════╦═════════════════════╗
+║ COL ║ FIELD NAMES ║ RECORD 56                     ║ RECORD 57           ║
+╠═════╬═════════════╬═══════════════════════════════╬═════════════════════╣
+║   1 ║ NAME        ║ Barrett                       ║ Merrill             ║
+║   2 ║ PHONE       ║ (016710) 41756                ║ (012569) 68555      ║
+║   3 ║ EMAIL       ║ pede.ac@malesuadavel.net      ║ Sed@egestas.edu     ║
+║   4 ║ update_dt   ║ Jan 3, 2021                   ║ Jul 6, 2020         ║
+║   5 ║ ORG_ID      ║ 779030709-00009               ║ 892857277-00008     ║
+║   6 ║ RUT         ║ 19250060-5                    ║ 36605598-3          ║
+║   7 ║ PID         ║ 16141207 1308                 ║ 16510511 1628       ║
+║   8 ║ OID         ║ 992146 2330                   ║ 507227 1298         ║
+║   9 ║ Address     ║ P.O. Box 531, 7721 Tempus Av. ║ 774-3652 Dictum Rd. ║
+║  10 ║ city        ║ Lokeren                       ║ Uruapan             ║
+║  11 ║ zip         ║ Z9743                         ║ 66-964              ║
+║  12 ║ region      ║ OV                            ║ Mic                 ║
+║  13 ║ country     ║ Cocos (Keeling) Islands       ║ Ukraine             ║
+║  14 ║ lat_long    ║ -15.29691, -141.59539         ║ -16.01491, 55.35563 ║
+║  15 ║ PAN         ║ 542765 3078199783             ║    5332814123831325 ║
+╚═════╩═════════════╩═══════════════════════════════╩═════════════════════╝
+``` 
 
 The main goal of `tbx` is not to display hundreds of rows of data, but to
 zero-in on a specific handful of rows you'd like to examine carefully.
