@@ -105,7 +105,7 @@ tbx --csv test_file.csv
 One of the most useful features is to be able to transpose the data, in
 combination with being able to select specific rows with `-l` and `-r`.
 
-For example, we have a wide file delimmited by pipes:
+For example, we have a wide file delimited by pipes:
 
 
 ```
