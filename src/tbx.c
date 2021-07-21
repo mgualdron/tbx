@@ -85,6 +85,7 @@ More than one FILE can be specified.\n\
   -r, --rows=NUM       process this many rows starting at -l (default is 10 or 1 if -x)\n\
   -w, --wrap=NUM       wrap each column to this length (default is 50)\n\
   -b, --bot-line       add a separating line above the last row of output (ignored if -x)\n\
+  -t, --trim           trim all fields\n\
   -F, --full           process the whole file (ignoring -r)\n\
   -T, --text           render table border in plain text\n\
   -h, --help           this help\n\
@@ -105,6 +106,7 @@ static struct option long_options[] = {
     {"wrap"      , required_argument, 0, 'w'},
     {"header"    , no_argument,       0, 'H'},
     {"bot-line"  , no_argument,       0, 'b'},
+    {"trim"      , no_argument,       0, 't'},
     {"full"      , no_argument,       0, 'F'},
     {"text"      , no_argument,       0, 'T'},
     {"help"      , no_argument,       0, 'h'},
@@ -135,11 +137,23 @@ static void replace_nulls(char *line, ssize_t bytes_read)
     }
 }
 
+/* Trim a field string: */
+/* Returns a heap-allocated string */
+char *trimString(char *str)
+{
+    size_t len = strlen(str);
+    while(isspace(str[len - 1])) --len;
+    while(*str && isspace(*str)) ++str, --len;
+    return strndup(str, len);
+}
+
+
 mbstate_t state;
 static char *enc = "UTF-8";
 static char *nl = "\n";
 
-static char *clean_and_wrap (char *in) {
+/* Replace unprintables and return a heap-allocated string */
+static char *clean_and_wrap (char *in, int trim_string) {
 
     size_t in_sz = strlen(in);
  
@@ -206,7 +220,15 @@ static char *clean_and_wrap (char *in) {
         }
     }
 
-    return(oput);
+	if ( trim_string ) {
+        char *trimmed = trimString(oput);
+        free(oput);
+        return(trimmed);
+	}
+    else {
+        return(oput);
+    }
+
 
 error:
     return(NULL);
@@ -214,7 +236,7 @@ error:
 
 
 /* Print an array of arrays in char table form */
-static int table_from_matrix(DArray *matrix, int bot_line)
+static int table_from_matrix(DArray *matrix, int bot_line, int trim_fields)
 {
 
     int i, j;
@@ -251,7 +273,7 @@ static int table_from_matrix(DArray *matrix, int bot_line)
                     ft_set_cell_prop(table, i, j, FT_CPROP_TEXT_ALIGN, FT_ALIGNED_RIGHT);
                 }
 
-                char *o = clean_and_wrap(p);
+                char *o = clean_and_wrap(p, trim_fields);
                 check(o != NULL, "Error while cleaning cell (%d,%d)", i, j);
 
                 ft_u8write(table, o);                 /* Put o on the table (heap) */
@@ -613,6 +635,7 @@ int main (int argc, char *argv[])
     int c;
     int csv_mode = 0;
     int bot_line = 0;
+    int trim_fields = 0;
     int delim_arg_flag = 0;
     int xpose_arg      = 0;
     int row_arg_flag   = 0;
@@ -627,7 +650,7 @@ int main (int argc, char *argv[])
         // getopt_long stores the option index here.
         int option_index = 0;
 
-        c = getopt_long (argc, argv, "bFHhxCTd:l:Q:r:w:", long_options, &option_index);
+        c = getopt_long (argc, argv, "bFHhxCTtd:l:Q:r:w:", long_options, &option_index);
 
         // Detect the end of the options.
         if (c == -1) break;
@@ -667,6 +690,11 @@ int main (int argc, char *argv[])
             case 'b':
                 debug("option -b");
                 bot_line = 1;
+                break;
+
+            case 't':
+                debug("option -t");
+                trim_fields = 1;
                 break;
 
             case 'F':
@@ -800,12 +828,12 @@ int main (int argc, char *argv[])
             DArray *xpose = transpose(matrix);
             check( xpose != NULL, "Error transposing file: %s", filename);
 
-            retval = table_from_matrix(xpose, 0);
+            retval = table_from_matrix(xpose, 0, trim_fields);
 
             master_destroy(xpose);
         }
         else {
-            retval = table_from_matrix(matrix, bot_line);
+            retval = table_from_matrix(matrix, bot_line, trim_fields);
         }
 
         master_destroy(matrix);
