@@ -4,7 +4,7 @@
 AC_PREREQ([2.69])
 AC_INIT(
     [tbx],
-    [0.0.3],
+    [0.0.4],
     [https://github.com/mgualdron/tbx/issues],
     [tbx],
     [https://github.com/mgualdron/tbx])
@@ -26,16 +26,10 @@ AC_PROG_INSTALL
 AC_PROG_RANLIB
 
 # Checks for libraries.
-AC_CHECK_LIB([fort], [ft_create_table])
 AC_CHECK_LIB([csv], [csv_parse], [LIBS="-l:libcsv.a $LIBS"] [AC_DEFINE([HAVE_LIBCSV], [1], [Define if csv_parse is found.])])
 
 # Checks for header files.
 # AC_CHECK_HEADERS([locale.h stdlib.h string.h wchar.h])
-AC_CHECK_HEADER([fort.h], , [AC_MSG_ERROR(
-[Could not find the fort header file. If fort.h is in a non-standard \
-location, you can add it by setting your CPPFLAGS variable when running \
-configure (./configure CPPFLAGS=-I/my/dir/include). Note that if you \
-also need to add the library location, append LDFLAGS=-L/my/dir/lib as well.])])
 AC_CHECK_HEADER([csv.h], , [AC_MSG_ERROR(
 [Could not find the csv header file. If csv.h is in a non-standard \
 location, you can add it by setting your CPPFLAGS variable when running \
