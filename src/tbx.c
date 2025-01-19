@@ -15,7 +15,7 @@
 #include <util/dbg.h>
 #include <util/darray.h>
 #include <csv.h>
-#include <fort.h>
+#include "fort.h"
 #include <uchar.h>
 #include "unistr.h"
 #include "uniwidth.h"
