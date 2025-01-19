@@ -150,12 +150,14 @@ See the included manual page for more details and examples.
 
 ## Building tbx
 
-Install the following required libraries.
+The project makes use of the following libraries:
 
-- [libcsv](https://github.com/rgamble/libcsv)
-- [libfort](https://github.com/seleznevae/libfort)
+- [libcsv](https://github.com/rgamble/libcsv) - This must be installed separately.
+- [libfort](https://github.com/seleznevae/libfort) - Version 0.4.1 of this source-code is included with `tbx` and does not need to be installed separately.
 
-These can be installed in the standard system locations or in your `$HOME` directory.
+Please consider starring both of those projects if you find `tbx` useful.
+
+The `libcsv` library can be installed in the standard system location or in your `$HOME` directory.
 
 Note that this git repository does not include a `configure` script like a 
 distribution tarball normally does.  If you don't want to bother with 
@@ -167,7 +169,7 @@ and run `configure`:
 ./configure
 ```
 
-If some of the required libraries are in your `$HOME` directory, 
+If the `libcsv` library was installed in your `$HOME` directory, 
 and if you also want the `tbx` binary installed in your `$HOME/bin`, you should 
 run something like:
 
