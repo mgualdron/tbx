@@ -162,7 +162,7 @@ The `libcsv` library can be installed in the standard system location or in your
 Note that this git repository does not include a `configure` script like a 
 distribution tarball normally does.  If you don't want to bother with 
 installing `autoconf` and `automake`, then download a distribution
-[package](https://github.com/mgualdron/tbx/releases/download/v0.0.3/tbx-0.0.3.tar.gz)
+[package](https://github.com/mgualdron/tbx/releases/download/v0.0.4/tbx-0.0.4.tar.gz)
 and run `configure`:
 
 ```
