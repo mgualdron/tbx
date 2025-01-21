@@ -152,29 +152,26 @@ See the included manual page for more details and examples.
 
 The project makes use of the following libraries:
 
-- [libcsv](https://github.com/rgamble/libcsv) - This must be installed separately.
-- [libfort](https://github.com/seleznevae/libfort) - Version 0.4.1 of this source-code is included with `tbx` and does not need to be installed separately.
+- [libcsv](https://github.com/rgamble/libcsv) - Version 3.0.3 of `libcsv` is included with `tbx`.
+- [libfort](https://github.com/seleznevae/libfort) - Version 0.4.1 of `libfort` is included with `tbx` and does not need to be installed separately.
 
 Please consider starring both of those projects if you find `tbx` useful.
-
-The `libcsv` library can be installed in the standard system location or in your `$HOME` directory.
 
 Note that this git repository does not include a `configure` script like a 
 distribution tarball normally does.  If you don't want to bother with 
 installing `autoconf` and `automake`, then download a distribution
-[package](https://github.com/mgualdron/tbx/releases/download/v0.0.4/tbx-0.0.4.tar.gz)
+[package](https://github.com/mgualdron/tbx/releases/download/v0.0.5/tbx-0.0.5.tar.gz)
 and run `configure`:
 
 ```
 ./configure
 ```
 
-If the `libcsv` library was installed in your `$HOME` directory, 
-and if you also want the `tbx` binary installed in your `$HOME/bin`, you should 
+If you want the `tbx` binary installed in your `$HOME/bin`, you should 
 run something like:
 
 ```
-./configure CPPFLAGS="-I$HOME/include" LDFLAGS="-L$HOME/lib" --prefix=$HOME
+./configure --prefix=$HOME
 ```
 
 If you're building from a copy of this git repository, you'll need to have 
