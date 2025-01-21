@@ -48,8 +48,11 @@ AC_DEFUN([gl_EARLY],
   # Code from module c32isprint:
   # Code from module c32rtomb:
   # Code from module c99:
+  # Code from module errno:
   # Code from module extensions:
   # Code from module extern-inline:
+  # Code from module getdelim:
+  # Code from module getline:
   # Code from module hard-locale:
   # Code from module include_next:
   # Code from module inline:
@@ -71,7 +74,12 @@ AC_DEFUN([gl_EARLY],
   # Code from module stdbool:
   # Code from module stddef:
   # Code from module stdint:
+  # Code from module stdio:
   # Code from module streq:
+  # Code from module string:
+  # Code from module strndup:
+  # Code from module strnlen:
+  # Code from module strsep:
   # Code from module sys_types:
   # Code from module uchar:
   # Code from module unictype/base:
@@ -102,6 +110,8 @@ AC_DEFUN([gl_INIT],
   m4_pushdef([AC_LIBSOURCES], m4_defn([gl_LIBSOURCES]))
   m4_pushdef([gl_LIBSOURCES_LIST], [])
   m4_pushdef([gl_LIBSOURCES_DIR], [])
+  m4_pushdef([GL_MACRO_PREFIX], [gl])
+  m4_pushdef([GL_MODULE_INDICATOR_PREFIX], [GL])
   gl_COMMON
   gl_source_base='lib'
   AC_REQUIRE([gl_UCHAR_H])
@@ -112,18 +122,33 @@ AC_DEFUN([gl_INIT],
     AC_LIBOBJ([c32rtomb])
   fi
   gl_UCHAR_MODULE_INDICATOR([c32rtomb])
+  gl_HEADER_ERRNO_H
   AC_REQUIRE([gl_EXTERN_INLINE])
+  gl_FUNC_GETDELIM
+  if test $HAVE_GETDELIM = 0 || test $REPLACE_GETDELIM = 1; then
+    AC_LIBOBJ([getdelim])
+    gl_PREREQ_GETDELIM
+  fi
+  gl_STDIO_MODULE_INDICATOR([getdelim])
+  gl_FUNC_GETLINE
+  if test $REPLACE_GETLINE = 1; then
+    AC_LIBOBJ([getline])
+    gl_PREREQ_GETLINE
+  fi
+  gl_STDIO_MODULE_INDICATOR([getline])
   AC_REQUIRE([gl_FUNC_SETLOCALE_NULL])
   LIB_HARD_LOCALE="$LIB_SETLOCALE_NULL"
   AC_SUBST([LIB_HARD_LOCALE])
   gl_INLINE
   gl_INTTYPES_INCOMPLETE
+  gl_INTTYPES_H_REQUIRE_DEFAULTS
   gl_LIMITS_H
   gl_LOCALCHARSET
   dnl For backward compatibility. Some packages still use this.
   LOCALCHARSET_TESTS_ENVIRONMENT=
   AC_SUBST([LOCALCHARSET_TESTS_ENVIRONMENT])
   gl_LOCALE_H
+  gl_LOCALE_H_REQUIRE_DEFAULTS
   gl_FUNC_MBRTOC32
   if test $HAVE_MBRTOC32 = 0 || test $REPLACE_MBRTOC32 = 1; then
     AC_LIBOBJ([mbrtoc32])
@@ -162,21 +187,84 @@ AC_DEFUN([gl_INIT],
   gt_TYPE_SSIZE_T
   AM_STDBOOL_H
   gl_STDDEF_H
+  gl_STDDEF_H_REQUIRE_DEFAULTS
   gl_STDINT_H
+  gl_STDIO_H
+  gl_STDIO_H_REQUIRE_DEFAULTS
+  dnl No need to create extra modules for these functions. Everyone who uses
+  dnl <stdio.h> likely needs them.
+  gl_STDIO_MODULE_INDICATOR([fscanf])
+  gl_MODULE_INDICATOR([fscanf])
+  gl_STDIO_MODULE_INDICATOR([scanf])
+  gl_MODULE_INDICATOR([scanf])
+  gl_STDIO_MODULE_INDICATOR([fgetc])
+  gl_STDIO_MODULE_INDICATOR([getc])
+  gl_STDIO_MODULE_INDICATOR([getchar])
+  gl_STDIO_MODULE_INDICATOR([fgets])
+  gl_STDIO_MODULE_INDICATOR([fread])
+  dnl No need to create extra modules for these functions. Everyone who uses
+  dnl <stdio.h> likely needs them.
+  gl_STDIO_MODULE_INDICATOR([fprintf])
+  gl_STDIO_MODULE_INDICATOR([printf])
+  gl_STDIO_MODULE_INDICATOR([vfprintf])
+  gl_STDIO_MODULE_INDICATOR([vprintf])
+  gl_STDIO_MODULE_INDICATOR([fputc])
+  gl_STDIO_MODULE_INDICATOR([putc])
+  gl_STDIO_MODULE_INDICATOR([putchar])
+  gl_STDIO_MODULE_INDICATOR([fputs])
+  gl_STDIO_MODULE_INDICATOR([puts])
+  gl_STDIO_MODULE_INDICATOR([fwrite])
+  gl_STRING_H
+  gl_STRING_H_REQUIRE_DEFAULTS
+  gl_FUNC_STRNDUP
+  if test $HAVE_STRNDUP = 0 || test $REPLACE_STRNDUP = 1; then
+    AC_LIBOBJ([strndup])
+  fi
+  gl_STRING_MODULE_INDICATOR([strndup])
+  gl_FUNC_STRNLEN
+  if test $HAVE_DECL_STRNLEN = 0 || test $REPLACE_STRNLEN = 1; then
+    AC_LIBOBJ([strnlen])
+    gl_PREREQ_STRNLEN
+  fi
+  gl_STRING_MODULE_INDICATOR([strnlen])
+  gl_FUNC_STRSEP
+  if test $HAVE_STRSEP = 0; then
+    AC_LIBOBJ([strsep])
+    gl_PREREQ_STRSEP
+  fi
+  gl_STRING_MODULE_INDICATOR([strsep])
   gl_SYS_TYPES_H
+  gl_SYS_TYPES_H_REQUIRE_DEFAULTS
   AC_PROG_MKDIR_P
   gl_UCHAR_H
-  gl_LIBUNISTRING_LIBHEADER([0.9.4], [unictype.h])
+  gl_UCHAR_H_REQUIRE_DEFAULTS
+  gl_LIBUNISTRING_LIBHEADER([0.9.8], [unictype.h])
   AC_REQUIRE([AC_C_INLINE])
   gl_LIBUNISTRING_MODULE([0.9.8], [unictype/ctype-print])
-  gl_LIBUNISTRING_LIBHEADER([0.9.4], [unistr.h])
+  gl_LIBUNISTRING_LIBHEADER([0.9.11], [unistr.h])
   gl_MODULE_INDICATOR([unistr/u8-mbtouc-unsafe])
   gl_LIBUNISTRING_MODULE([0.9.4], [unistr/u8-mbtouc-unsafe])
-  gl_LIBUNISTRING_LIBHEADER([0.9.4], [unitypes.h])
-  gl_LIBUNISTRING_LIBHEADER([0.9.4], [uniwidth.h])
+  gl_LIBUNISTRING_LIBHEADER([0.9.11], [unitypes.h])
+  AH_VERBATIM([unitypes_restrict], [
+  /* This definition is a duplicate of the one in unitypes.h.
+     It is here so that we can cope with an older version of unitypes.h
+     that does not contain this definition and that is pre-installed among
+     the public header files.  */
+  # if defined __restrict \
+       || 2 < __GNUC__ + (95 <= __GNUC_MINOR__) \
+       || __clang_major__ >= 3
+  #  define _UC_RESTRICT __restrict
+  # elif 199901L <= __STDC_VERSION__ || defined restrict
+  #  define _UC_RESTRICT restrict
+  # else
+  #  define _UC_RESTRICT
+  # endif
+  ])
+  gl_LIBUNISTRING_LIBHEADER([0.9.11], [uniwidth.h])
   gl_LIBUNISTRING_MODULE([0.9.8], [uniwidth/u8-width])
   gl_LIBUNISTRING_MODULE([0.9.8], [uniwidth/width])
   gl_WCHAR_H
+  gl_WCHAR_H_REQUIRE_DEFAULTS
   gl_FUNC_WCRTOMB
   if test $HAVE_WCRTOMB = 0 || test $REPLACE_WCRTOMB = 1; then
     AC_LIBOBJ([wcrtomb])
@@ -184,6 +272,7 @@ AC_DEFUN([gl_INIT],
   fi
   gl_WCHAR_MODULE_INDICATOR([wcrtomb])
   gl_WCTYPE_H
+  gl_WCTYPE_H_REQUIRE_DEFAULTS
   # End of code from modules
   m4_ifval(gl_LIBSOURCES_LIST, [
     m4_syscmd([test ! -d ]m4_defn([gl_LIBSOURCES_DIR])[ ||
@@ -196,6 +285,8 @@ AC_DEFUN([gl_INIT],
       m4_if(m4_sysval, [0], [],
         [AC_FATAL([expected source file, required through AC_LIBSOURCES, not found])])
   ])
+  m4_popdef([GL_MODULE_INDICATOR_PREFIX])
+  m4_popdef([GL_MACRO_PREFIX])
   m4_popdef([gl_LIBSOURCES_DIR])
   m4_popdef([gl_LIBSOURCES_LIST])
   m4_popdef([AC_LIBSOURCES])
@@ -222,6 +313,8 @@ AC_DEFUN([gl_INIT],
   m4_pushdef([AC_LIBSOURCES], m4_defn([gltests_LIBSOURCES]))
   m4_pushdef([gltests_LIBSOURCES_LIST], [])
   m4_pushdef([gltests_LIBSOURCES_DIR], [])
+  m4_pushdef([GL_MACRO_PREFIX], [gltests])
+  m4_pushdef([GL_MODULE_INDICATOR_PREFIX], [GL])
   gl_COMMON
   gl_source_base='tests'
 changequote(,)dnl
@@ -242,6 +335,8 @@ changequote([, ])dnl
       m4_if(m4_sysval, [0], [],
         [AC_FATAL([expected source file, required through AC_LIBSOURCES, not found])])
   ])
+  m4_popdef([GL_MODULE_INDICATOR_PREFIX])
+  m4_popdef([GL_MACRO_PREFIX])
   m4_popdef([gltests_LIBSOURCES_DIR])
   m4_popdef([gltests_LIBSOURCES_LIST])
   m4_popdef([AC_LIBSOURCES])
@@ -330,6 +425,9 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/c32is-impl.h
   lib/c32isprint.c
   lib/c32rtomb.c
+  lib/errno.in.h
+  lib/getdelim.c
+  lib/getline.c
   lib/hard-locale.c
   lib/hard-locale.h
   lib/inttypes.in.h
@@ -352,7 +450,12 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/stdbool.in.h
   lib/stddef.in.h
   lib/stdint.in.h
+  lib/stdio.in.h
   lib/streq.h
+  lib/string.in.h
+  lib/strndup.c
+  lib/strnlen.c
+  lib/strsep.c
   lib/sys_types.in.h
   lib/uchar.in.h
   lib/unictype.in.h
@@ -379,8 +482,11 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/absolute-header.m4
   m4/c32rtomb.m4
   m4/codeset.m4
+  m4/errno_h.m4
   m4/extensions.m4
   m4/extern-inline.m4
+  m4/getdelim.m4
+  m4/getline.m4
   m4/gnulib-common.m4
   m4/include_next.m4
   m4/inline.m4
@@ -405,9 +511,14 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/stdbool.m4
   m4/stddef_h.m4
   m4/stdint.m4
+  m4/stdio_h.m4
+  m4/string_h.m4
+  m4/strndup.m4
+  m4/strnlen.m4
+  m4/strsep.m4
   m4/sys_types_h.m4
   m4/threadlib.m4
-  m4/uchar.m4
+  m4/uchar_h.m4
   m4/visibility.m4
   m4/warn-on-use.m4
   m4/wchar_h.m4

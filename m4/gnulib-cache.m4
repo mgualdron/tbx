@@ -40,7 +40,10 @@
 #  --no-vc-files \
 #  c32isprint \
 #  c32rtomb \
+#  getline \
 #  mbrtoc32 \
+#  strndup \
+#  strsep \
 #  uniwidth/u8-width
 
 # Specification in the form of a few gnulib-tool.m4 macro invocations:
@@ -48,7 +51,10 @@ gl_LOCAL_DIR([])
 gl_MODULES([
   c32isprint
   c32rtomb
+  getline
   mbrtoc32
+  strndup
+  strsep
   uniwidth/u8-width
 ])
 gl_AVOID([])

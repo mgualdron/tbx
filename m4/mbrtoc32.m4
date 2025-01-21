@@ -1,4 +1,4 @@
-# mbrtoc32.m4 serial 7
+# mbrtoc32.m4 serial 9
 dnl Copyright (C) 2014-2021 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
@@ -18,7 +18,7 @@ AC_DEFUN([gl_FUNC_MBRTOC32],
   if test $gl_cv_func_mbrtoc32 = no; then
     HAVE_MBRTOC32=0
   else
-    if test $GNULIB_OVERRIDES_CHAR32_T = 1 || test $REPLACE_MBSTATE_T = 1; then
+    if test $GNULIBHEADERS_OVERRIDE_CHAR32_T = 1 || test $REPLACE_MBSTATE_T = 1; then
       REPLACE_MBRTOC32=1
     else
       gl_MBRTOC32_EMPTY_INPUT
@@ -147,7 +147,7 @@ AC_DEFUN([gl_MBRTOC32_SANITYCHECK],
   AC_REQUIRE([gt_LOCALE_FR])
   AC_REQUIRE([gt_LOCALE_ZH_CN])
   AC_REQUIRE([AC_CANONICAL_HOST]) dnl for cross-compiles
-  if test $GNULIB_OVERRIDES_CHAR32_T = 1 || test $gl_cv_func_mbrtoc32 = no; then
+  if test $GNULIBHEADERS_OVERRIDE_CHAR32_T = 1 || test $gl_cv_func_mbrtoc32 = no; then
     HAVE_WORKING_MBRTOC32=0
   else
     AC_CACHE_CHECK([whether mbrtoc32 works as well as mbrtowc],
@@ -194,7 +194,7 @@ int main ()
             result |= 1;
         }
     }
-  /* This fails on FreeBSD 12 and Solaris 11.4:
+  /* This fails on FreeBSD 13.0 and Solaris 11.4:
      mbrtoc32 returns (size_t)-2 or (size_t)-1.
      mbrtowc returns 4 (correct).  */
   if (setlocale (LC_ALL, "$LOCALE_ZH_CN") != NULL)

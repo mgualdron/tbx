@@ -3,7 +3,7 @@ AM_CFLAGS = -g -O2 -std=gnu99 -Wall -Wextra
 SUBDIRS = lib
 
 noinst_LIBRARIES = build/libutil.a
-build_libutil_a_SOURCES = src/util/darray.c src/util/darray.h src/util/dbg.h src/util/fort.c src/util/fort.h
+build_libutil_a_SOURCES = src/util/darray.c src/util/darray.h src/util/dbg.h src/util/csv.c src/util/csv.h src/util/fort.c src/util/fort.h
 build_libutil_a_CPPFLAGS = -I$(top_srcdir)/src -DNDEBUG
 
 dist_man_MANS = man/tbx.1

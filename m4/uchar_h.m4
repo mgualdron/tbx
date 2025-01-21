@@ -1,4 +1,4 @@
-# uchar.m4 serial 16
+# uchar_h.m4 serial 20
 dnl Copyright (C) 2019-2021 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
@@ -75,7 +75,6 @@ dnl On Haiku 2020, char16_t and char32_t are incorrectly defined.
 dnl See <https://dev.haiku-os.org/ticket/15990>.
 AC_DEFUN_ONCE([gl_TYPE_CHAR16_T],
 [
-  AC_REQUIRE([gl_UCHAR_H_DEFAULTS])
   dnl Determine whether gnulib's <uchar.h> would, if present, override char16_t.
   AC_CACHE_CHECK([whether char16_t is correctly defined],
     [gl_cv_type_char16_t_works],
@@ -91,12 +90,14 @@ AC_DEFUN_ONCE([gl_TYPE_CHAR16_T],
        [gl_cv_type_char16_t_works=no])
     ])
   if test $gl_cv_type_char16_t_works = no; then
-    GNULIB_OVERRIDES_CHAR16_T=1
+    GNULIBHEADERS_OVERRIDE_CHAR16_T=1
+  else
+    GNULIBHEADERS_OVERRIDE_CHAR16_T=0
   fi
+  AC_SUBST([GNULIBHEADERS_OVERRIDE_CHAR16_T])
 ])
 AC_DEFUN_ONCE([gl_TYPE_CHAR32_T],
 [
-  AC_REQUIRE([gl_UCHAR_H_DEFAULTS])
   dnl Determine whether gnulib's <uchar.h> would, if present, override char32_t.
   AC_CACHE_CHECK([whether char32_t is correctly defined],
     [gl_cv_type_char32_t_works],
@@ -112,45 +113,61 @@ AC_DEFUN_ONCE([gl_TYPE_CHAR32_T],
        [gl_cv_type_char32_t_works=no])
     ])
   if test $gl_cv_type_char32_t_works = no; then
-    GNULIB_OVERRIDES_CHAR32_T=1
+    GNULIBHEADERS_OVERRIDE_CHAR32_T=1
+  else
+    GNULIBHEADERS_OVERRIDE_CHAR32_T=0
   fi
+  AC_SUBST([GNULIBHEADERS_OVERRIDE_CHAR32_T])
 ])
 
+# gl_UCHAR_MODULE_INDICATOR([modulename])
+# sets the shell variable that indicates the presence of the given module
+# to a C preprocessor expression that will evaluate to 1.
+# This macro invocation must not occur in macros that are AC_REQUIREd.
 AC_DEFUN([gl_UCHAR_MODULE_INDICATOR],
 [
-  dnl Use AC_REQUIRE here, so that the default settings are expanded once only.
-  AC_REQUIRE([gl_UCHAR_H_DEFAULTS])
+  dnl Ensure to expand the default settings once only.
+  gl_UCHAR_H_REQUIRE_DEFAULTS
   gl_MODULE_INDICATOR_SET_VARIABLE([$1])
   dnl Define it also as a C macro, for the benefit of the unit tests.
   gl_MODULE_INDICATOR_FOR_TESTS([$1])
 ])
 
+# Initializes the default values for AC_SUBSTed shell variables.
+# This macro must not be AC_REQUIREd.  It must only be invoked, and only
+# outside of macros or in macros that are not AC_REQUIREd.
+AC_DEFUN([gl_UCHAR_H_REQUIRE_DEFAULTS],
+[
+  m4_defun(GL_MODULE_INDICATOR_PREFIX[_UCHAR_H_MODULE_INDICATOR_DEFAULTS], [
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_BTOC32])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_C32ISALNUM])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_C32ISALPHA])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_C32ISBLANK])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_C32ISCNTRL])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_C32ISDIGIT])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_C32ISGRAPH])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_C32ISLOWER])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_C32ISPRINT])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_C32ISPUNCT])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_C32ISSPACE])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_C32ISUPPER])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_C32ISXDIGIT])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_C32RTOMB])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_C32SNRTOMBS])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_C32SRTOMBS])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_C32STOMBS])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_C32TOB])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_MBRTOC32])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_MBSNRTOC32S])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_MBSRTOC32S])
+    gl_MODULE_INDICATOR_INIT_VARIABLE([GNULIB_MBSTOC32S])
+  ])
+  m4_require(GL_MODULE_INDICATOR_PREFIX[_UCHAR_H_MODULE_INDICATOR_DEFAULTS])
+  AC_REQUIRE([gl_UCHAR_H_DEFAULTS])
+])
+
 AC_DEFUN([gl_UCHAR_H_DEFAULTS],
 [
-  GNULIB_OVERRIDES_CHAR16_T=0; AC_SUBST([GNULIB_OVERRIDES_CHAR16_T])
-  GNULIB_OVERRIDES_CHAR32_T=0; AC_SUBST([GNULIB_OVERRIDES_CHAR32_T])
-  GNULIB_BTOC32=0;             AC_SUBST([GNULIB_BTOC32])
-  GNULIB_C32ISALNUM=0;         AC_SUBST([GNULIB_C32ISALNUM])
-  GNULIB_C32ISALPHA=0;         AC_SUBST([GNULIB_C32ISALPHA])
-  GNULIB_C32ISBLANK=0;         AC_SUBST([GNULIB_C32ISBLANK])
-  GNULIB_C32ISCNTRL=0;         AC_SUBST([GNULIB_C32ISCNTRL])
-  GNULIB_C32ISDIGIT=0;         AC_SUBST([GNULIB_C32ISDIGIT])
-  GNULIB_C32ISGRAPH=0;         AC_SUBST([GNULIB_C32ISGRAPH])
-  GNULIB_C32ISLOWER=0;         AC_SUBST([GNULIB_C32ISLOWER])
-  GNULIB_C32ISPRINT=0;         AC_SUBST([GNULIB_C32ISPRINT])
-  GNULIB_C32ISPUNCT=0;         AC_SUBST([GNULIB_C32ISPUNCT])
-  GNULIB_C32ISSPACE=0;         AC_SUBST([GNULIB_C32ISSPACE])
-  GNULIB_C32ISUPPER=0;         AC_SUBST([GNULIB_C32ISUPPER])
-  GNULIB_C32ISXDIGIT=0;        AC_SUBST([GNULIB_C32ISXDIGIT])
-  GNULIB_C32RTOMB=0;           AC_SUBST([GNULIB_C32RTOMB])
-  GNULIB_C32SNRTOMBS=0;        AC_SUBST([GNULIB_C32SNRTOMBS])
-  GNULIB_C32SRTOMBS=0;         AC_SUBST([GNULIB_C32SRTOMBS])
-  GNULIB_C32STOMBS=0;          AC_SUBST([GNULIB_C32STOMBS])
-  GNULIB_C32TOB=0;             AC_SUBST([GNULIB_C32TOB])
-  GNULIB_MBRTOC32=0;           AC_SUBST([GNULIB_MBRTOC32])
-  GNULIB_MBSNRTOC32S=0;        AC_SUBST([GNULIB_MBSNRTOC32S])
-  GNULIB_MBSRTOC32S=0;         AC_SUBST([GNULIB_MBSRTOC32S])
-  GNULIB_MBSTOC32S=0;          AC_SUBST([GNULIB_MBSTOC32S])
   dnl Assume proper GNU behavior unless another module says otherwise.
   HAVE_C32RTOMB=1;             AC_SUBST([HAVE_C32RTOMB])
   HAVE_MBRTOC32=1;             AC_SUBST([HAVE_MBRTOC32])
