@@ -1,3 +1,26 @@
+2025-01-21: Documentation updates for libcsv addition.
+2025-01-21: Changes for additions of gnulib getline, strndup and strsep.
+2025-01-21: Added gnulib modules getline, strndup and strsep to allow the build on non-POSIX systems.
+2025-01-21: Adding version 3.0.3 of libcsv.
+2025-01-19: Minor fixes to be able to build v0.0.4.
+2025-01-19: Adding fort.h from version 0.4.1 of the libfort library.
+2025-01-19: Adjusted for newly included fort.h and fort.c.
+2025-01-19: Adding version 0.4.1 of the libfort library.
+2025-01-19: Swithced to local copy of fort.h.
+2025-01-19: Removed checks for fort.h and libfort, as they are now included with tbx.
+2025-01-19: Added src/util/fort.c and src/util/fort.h to the libutil sources.
+2021-07-21: Added a -t option to trim the input.
+2021-06-29: Minor spelling fix.
+2021-06-29: Better transpose example.
+2021-06-24: Cleanup NUL characters when processing CSV files.
+2021-06-24: Switched NUL_REPLACMENT_CHARACTER to '?'.
+2021-06-24: Added better handling of embedded NUL characters.
+2021-06-24: Added a -b option to draw a separating line above the last row of output.
+2021-04-21: Minor update for v0.0.3
+2021-04-21: Bumped version to 0.0.3
+2021-04-21: Added code to speed up processing on large files when a small set of records is selected.  Also added a check to ignore a BOM character.
+2021-02-24: Minor fixes for clarity.
+2021-02-24: Minor documentation updates for v0.0.2.
 2021-02-24: Minor adjustment to allow NUL byte in mb character output.
 2021-02-22: Minor documentation updates for clarity.
 2021-02-22: Updates to include latest Gnulib-related changes.
