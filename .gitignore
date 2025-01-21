@@ -83,6 +83,8 @@ lib/inttypes.h
 lib/limits.h
 lib/locale.h
 lib/sys/
+lib/stdio.h
+lib/string.h
 lib/uchar.h
 lib/unictype.h
 lib/unistr.h

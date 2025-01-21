@@ -45,7 +45,7 @@ AC_TYPE_SSIZE_T
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_FUNC_STRTOD
-AC_CHECK_FUNCS([memset setlocale strdup strndup strstr])
+AC_CHECK_FUNCS([memset setlocale strdup strndup strstr strsep getline])
 
 AC_OUTPUT
 
