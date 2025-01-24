@@ -14,11 +14,11 @@
 #include <ctype.h>
 #include <util/dbg.h>
 #include <util/darray.h>
-#include "util/csv.h"
-#include "util/fort.h"
+#include <util/csv.h>
+#include <util/fort.h>
 #include <uchar.h>
-#include "unistr.h"
-#include "uniwidth.h"
+#include <unistr.h>
+#include <uniwidth.h>
 #include "config.h"
 #define INT_SIZE 16
 #define DEFAULT_ROWS 10

@@ -1,5 +1,7 @@
 # tbx
 
+![build status](https://github.com/mgualdron/tbx/actions/workflows/c-cpp.yml/badge.svg)
+
 ## Description
 
 Small command-line utility to display delimited text in tabular form.
@@ -150,12 +152,13 @@ See the included manual page for more details and examples.
 
 ## Building tbx
 
-The project makes use of the following libraries:
+The following projects have made `tbx` possible:
 
 - [libcsv](https://github.com/rgamble/libcsv) - Version 3.0.3 of `libcsv` is included with `tbx`.
 - [libfort](https://github.com/seleznevae/libfort) - Version 0.4.1 of `libfort` is included with `tbx` and does not need to be installed separately.
+- [gnulib](https://www.gnu.org/software/gnulib/) - Several modules are included with `tbx` for portability.
 
-Please consider starring both of those projects if you find `tbx` useful.
+Please consider contributing to those projects if you find `tbx` useful.
 
 Note that this git repository does not include a `configure` script like a 
 distribution tarball normally does.  If you don't want to bother with 
