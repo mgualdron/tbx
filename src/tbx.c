@@ -16,9 +16,9 @@
 #include <util/darray.h>
 #include <util/csv.h>
 #include <util/fort.h>
-#include <uchar.h>
-#include <unistr.h>
-#include <uniwidth.h>
+#include "lib/uchar.h"
+#include "lib/unistr.h"
+#include "lib/uniwidth.h"
 #include "config.h"
 #define INT_SIZE 16
 #define DEFAULT_ROWS 10

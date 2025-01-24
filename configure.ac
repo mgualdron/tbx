@@ -26,7 +26,7 @@ AC_PROG_INSTALL
 AC_PROG_RANLIB
 
 # Checks for libraries.
-AC_CHECK_LIB([csv], [csv_parse], [LIBS="-l:libcsv.a $LIBS"] [AC_DEFINE([HAVE_LIBCSV], [1], [Define if csv_parse is found.])])
+# AC_CHECK_LIB([csv], [csv_parse], [LIBS="-l:libcsv.a $LIBS"] [AC_DEFINE([HAVE_LIBCSV], [1], [Define if csv_parse is found.])])
 
 # Checks for header files.
 # AC_CHECK_HEADERS([locale.h stdlib.h string.h wchar.h])
