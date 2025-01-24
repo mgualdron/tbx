@@ -12,10 +12,10 @@
 #include <locale.h>
 #include <getopt.h>
 #include <ctype.h>
-#include <util/dbg.h>
-#include <util/darray.h>
-#include <util/csv.h>
-#include <util/fort.h>
+#include "util/dbg.h"
+#include "util/darray.h"
+#include "util/csv.h"
+#include "util/fort.h"
 #include "lib/uchar.h"
 #include "lib/unistr.h"
 #include "lib/uniwidth.h"
